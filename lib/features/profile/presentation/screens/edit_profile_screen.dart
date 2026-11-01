@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/services/accessibility_service.dart';
 import '../../../../core/services/location_service.dart';
+import '../../../../core/errors/app_error_handler.dart';
 import '../../data/datasources/profile_remote_data_source.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -149,11 +150,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal mengambil lokasi GPS: $e'),
-            backgroundColor: const Color(0xFFEF4444),
-          ),
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          e,
+          prefix: 'Gagal mengambil lokasi GPS',
         );
       }
     } finally {
@@ -226,9 +226,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       debugPrint("Error updating profile: $e");
       if (mounted) {
-        ScaffoldMessenger.of(
+        AppErrorHandler.showErrorSnackBar(
           context,
-        ).showSnackBar(SnackBar(content: Text('Gagal mengupdate profil: $e')));
+          e,
+          prefix: 'Gagal mengupdate profil',
+        );
       }
     } finally {
       if (mounted) {

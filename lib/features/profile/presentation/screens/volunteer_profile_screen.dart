@@ -11,6 +11,7 @@ import '../../../../core/constants/api_constants.dart';
 import '../../../../routing/routes.dart';
 import '../../../../core/services/accessibility_service.dart';
 import '../../../../core/theme/accessible_colors.dart';
+import '../../../../core/errors/app_error_handler.dart';
 import '../../../volunteer_task/data/datasources/volunteer_remote_data_source.dart';
 import '../../../../core/utils/global_event_bus.dart' as event_bus;
 import '../../../dashboard/presentation/widgets/volunteer_sop_modal.dart';
@@ -191,11 +192,10 @@ class _VolunteerProfileScreenState extends State<VolunteerProfileScreen> {
           _isCheckingStatus = false;
         });
         if (isManualCheck) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Gagal memeriksa status: $e'),
-              backgroundColor: const Color(0xFFDC2626),
-            ),
+          AppErrorHandler.showErrorSnackBar(
+            context,
+            e,
+            prefix: 'Gagal memeriksa status',
           );
         }
       }

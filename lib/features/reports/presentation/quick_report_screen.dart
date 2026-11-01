@@ -11,6 +11,7 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sahabat_sos_mobile/core/di/injection.dart';
 import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
+import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 import 'package:sahabat_sos_mobile/core/theme/accessible_colors.dart';
 import 'package:sahabat_sos_mobile/features/reports/data/datasources/report_remote_data_source.dart';
 
@@ -895,12 +896,10 @@ class _QuickReportScreenState extends State<QuickReportScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal mengirim laporan: $e'),
-            backgroundColor: const Color(0xFFDC2626),
-            duration: const Duration(seconds: 4),
-          ),
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          e,
+          prefix: 'Gagal mengirim laporan',
         );
       }
     } finally {

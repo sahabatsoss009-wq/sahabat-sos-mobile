@@ -91,7 +91,10 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     );
 
     if (response.statusCode == 422) {
-      final message = response.data['message'] ?? 'Sinyal SOS darurat masih aktif';
+      final resData = response.data;
+      final message = resData is Map && resData['message'] != null
+          ? resData['message']
+          : 'Sinyal SOS darurat masih aktif';
       throw DioException(
         requestOptions: response.requestOptions,
         response: response,
@@ -100,7 +103,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     }
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Gagal mengirim sinyal darurat (Kode: ${response.statusCode})');
+      throw Exception('Gagal mengirim sinyal darurat ke server.');
     }
 
     final resData = response.data;

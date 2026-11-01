@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/services/accessibility_service.dart';
 import '../../../../core/theme/accessible_colors.dart';
+import '../../../../core/errors/app_error_handler.dart';
 import '../../../../routing/routes.dart';
 
 enum _NeedType { tunanetra, tunarungu, tunawicara, umum }
@@ -1535,36 +1536,19 @@ class _RegisterStep2PageState extends State<RegisterStep2Page> {
         }
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menyimpan profil: ${response.data}')),
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          'Gagal menyimpan profil. Mohon periksa kembali data yang diisi.',
         );
       }
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context); // Tutup Loading
 
-      String message = 'Terjadi kesalahan: $e';
-      if (e is DioException) {
-        final resData = e.response?.data;
-        if (resData is Map) {
-          if (resData['message'] != null) {
-            message = resData['message'].toString();
-          } else if (resData['error'] != null) {
-            message = resData['error'].toString();
-          } else if (resData['errors'] is Map) {
-            final firstErrorList = (resData['errors'] as Map).values.first;
-            if (firstErrorList is List && firstErrorList.isNotEmpty) {
-              message = firstErrorList.first.toString();
-            }
-          }
-        }
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red.shade700,
-        ),
+      AppErrorHandler.showErrorSnackBar(
+        context,
+        e,
+        prefix: 'Gagal Menyimpan Profil',
       );
     }
   }

@@ -16,6 +16,7 @@ import 'package:sahabat_sos_mobile/features/dashboard/data/datasources/dashboard
 import 'package:sahabat_sos_mobile/features/tuya_device/data/services/tuya_channel_service.dart';
 import 'package:sahabat_sos_mobile/features/tuya_device/data/models/tuya_device_model.dart';
 import 'package:sahabat_sos_mobile/core/services/health_connect_service.dart';
+import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 import 'package:sahabat_sos_mobile/routing/routes.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -35,6 +36,7 @@ class _DashboardPageState extends State<DashboardPage>
   late Animation<double> _scaleAnimation;
   int _tapCount = 0;
   Timer? _tapTimer;
+  bool _isExecutingEmergencySos = false;
 
   String _userName = '';
   bool _isBerandaLoading = true;
@@ -427,6 +429,9 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Future<void> _executeEmergencySos() async {
+    if (_isExecutingEmergencySos) return;
+    _isExecutingEmergencySos = true;
+
     unawaited(
       showDialog(
         context: context,
@@ -509,7 +514,9 @@ class _DashboardPageState extends State<DashboardPage>
       );
 
       if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
+      if (Navigator.of(context, rootNavigator: true).canPop()) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
 
       final isGpsLocked = latitude != 0.0 && longitude != 0.0;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -530,18 +537,21 @@ class _DashboardPageState extends State<DashboardPage>
       );
     } catch (e) {
       if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
+      if (Navigator.of(context, rootNavigator: true).canPop()) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
 
       if (e is DioException && e.response?.statusCode == 422) {
-        final message =
-            e.response?.data['message'] ?? 'Sinyal SOS darurat masih aktif';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message.toString()),
-            backgroundColor: Colors.red.shade700,
-          ),
+        final resData = e.response?.data;
+        final message = resData is Map
+            ? (resData['message'] ?? 'Sinyal SOS darurat masih aktif')
+            : 'Sinyal SOS darurat masih aktif';
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          message.toString(),
         );
-        final existingData = e.response?.data is Map ? e.response?.data['data'] : null;
+        final existingData =
+            resData is Map && resData['data'] is Map ? resData['data'] : null;
         final existingSosId = (existingData is Map && existingData['id'] != null)
             ? (existingData['id'] as num).toInt()
             : null;
@@ -556,10 +566,22 @@ class _DashboardPageState extends State<DashboardPage>
           );
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengirim SOS: $e')),
+        AccessibilityService.instance.hapticHeavy();
+        unawaited(
+          AccessibilityService.instance.speak(
+            'Sinyal darurat belum terhubung ke server. Segera hubungi 112 atau kontak darurat.',
+          ),
+        );
+        unawaited(
+          AppErrorHandler.showEmergencyFailureDialog(
+            context,
+            error: e,
+            onRetry: () => _executeEmergencySos(),
+          ),
         );
       }
+    } finally {
+      _isExecutingEmergencySos = false;
     }
   }
 

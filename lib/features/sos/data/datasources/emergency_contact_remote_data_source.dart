@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/errors/app_error_handler.dart';
 
 abstract class EmergencyContactRemoteDataSource {
   Future<List<dynamic>> getContacts();
@@ -42,7 +43,10 @@ class EmergencyContactRemoteDataSourceImpl
       }
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data?['message'] ?? 'Gagal mengambil kontak darurat',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal mengambil kontak darurat',
+        ),
       );
     }
   }
@@ -63,7 +67,10 @@ class EmergencyContactRemoteDataSourceImpl
       }
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data?['message'] ?? 'Gagal mengambil detail kontak darurat',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal mengambil detail kontak darurat',
+        ),
       );
     }
   }
@@ -85,7 +92,10 @@ class EmergencyContactRemoteDataSourceImpl
       }
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data?['message'] ?? 'Gagal menambahkan kontak darurat',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal menambahkan kontak darurat',
+        ),
       );
     }
   }
@@ -110,7 +120,10 @@ class EmergencyContactRemoteDataSourceImpl
       }
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data?['message'] ?? 'Gagal memperbarui kontak darurat',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal memperbarui kontak darurat',
+        ),
       );
     }
   }
@@ -129,7 +142,10 @@ class EmergencyContactRemoteDataSourceImpl
       }
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data?['message'] ?? 'Gagal menghapus kontak darurat',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal menghapus kontak darurat',
+        ),
       );
     }
   }
@@ -151,7 +167,10 @@ class EmergencyContactRemoteDataSourceImpl
       }
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data?['message'] ?? 'Gagal mengubah status notifikasi',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal mengubah status notifikasi',
+        ),
       );
     }
   }

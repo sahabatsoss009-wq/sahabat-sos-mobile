@@ -14,6 +14,7 @@ import '../../../../core/services/accessibility_service.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/utils/global_event_bus.dart' as event_bus;
 import '../../../../routing/routes.dart';
+import '../../../../core/errors/app_error_handler.dart';
 import '../../data/datasources/profile_remote_data_source.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -256,11 +257,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal memperbarui lokasi GPS: $e'),
-            backgroundColor: const Color(0xFFEF4444),
-          ),
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          e,
+          prefix: 'Gagal memperbarui lokasi GPS',
         );
       }
     } finally {

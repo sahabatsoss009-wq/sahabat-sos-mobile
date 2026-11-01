@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/errors/app_error_handler.dart';
 
 abstract class ReportRemoteDataSource {
   Future<Map<String, dynamic>> getReportOptions();
@@ -35,20 +36,29 @@ class ReportRemoteDataSourceImpl implements ReportRemoteDataSource {
       throw Exception('Token otentikasi tidak ditemukan. Silakan login kembali.');
     }
 
-    final response = await dio.get(
-      ApiConstants.laporanOptions,
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
-      ),
-    );
+    try {
+      final response = await dio.get(
+        ApiConstants.laporanOptions,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+        ),
+      );
 
-    if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
-      return response.data as Map<String, dynamic>;
+      if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+        return response.data as Map<String, dynamic>;
+      }
+      throw Exception('Gagal memuat opsi laporan dari server.');
+    } catch (e) {
+      throw Exception(
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal memuat opsi laporan dari server.',
+        ),
+      );
     }
-    throw Exception('Gagal memuat opsi laporan dari server.');
   }
 
   @override
@@ -108,21 +118,34 @@ class ReportRemoteDataSourceImpl implements ReportRemoteDataSource {
       );
     }
 
-    final response = await dio.post(
-      ApiConstants.laporan,
-      data: formData,
-      options: Options(
-        sendTimeout: const Duration(minutes: 3),
-        receiveTimeout: const Duration(minutes: 3),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
-      ),
-    );
+    try {
+      final response = await dio.post(
+        ApiConstants.laporan,
+        data: formData,
+        options: Options(
+          sendTimeout: const Duration(minutes: 3),
+          receiveTimeout: const Duration(minutes: 3),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+        ),
+      );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Gagal mengirim laporan (Status: ${response.statusCode})');
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception(
+          response.data is Map && response.data['message'] != null
+              ? response.data['message']
+              : 'Gagal mengirim laporan kejadian.',
+        );
+      }
+    } catch (e) {
+      throw Exception(
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal mengirim laporan kejadian ke server.',
+        ),
+      );
     }
   }
 }

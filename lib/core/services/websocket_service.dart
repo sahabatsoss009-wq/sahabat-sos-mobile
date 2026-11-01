@@ -29,11 +29,12 @@ class WebsocketService {
     if (echo != null) return;
 
     final uri = Uri.parse(ApiConstants.baseUrl);
+    final isHttps = uri.scheme == 'https';
     // Host, port, dan kredensial Reverb mendukung environment variable dengan fallback runtime
     const envHost = String.fromEnvironment('REVERB_HOST');
     final host = envHost.isNotEmpty ? envHost : uri.host;
     final int reverbPort =
-        int.tryParse(const String.fromEnvironment('REVERB_PORT')) ?? 8080;
+        int.tryParse(const String.fromEnvironment('REVERB_PORT')) ?? (isHttps ? 443 : 8080);
     const reverbKey = String.fromEnvironment(
       'REVERB_APP_KEY',
       defaultValue: 'sahabat-sos-app-key',
@@ -42,10 +43,9 @@ class WebsocketService {
       'REVERB_APP_CLUSTER',
       defaultValue: 'mt1',
     );
-    const reverbEncrypted = bool.fromEnvironment(
-      'REVERB_ENCRYPTED',
-      defaultValue: false,
-    );
+    final reverbEncrypted = const bool.hasEnvironment('REVERB_ENCRYPTED')
+        ? const bool.fromEnvironment('REVERB_ENCRYPTED')
+        : isHttps;
 
     try {
       final options = PusherOptions(
@@ -59,7 +59,7 @@ class WebsocketService {
 
         // Auth endpoint untuk private channel
         authOptions: PusherAuthOptions(
-          '${uri.scheme}://$host:${uri.port}/api/broadcasting/auth',
+          '${ApiConstants.baseUrl.replaceAll(RegExp(r"/+$"), "")}/broadcasting/auth',
           headers: () async => {
             'Authorization': 'Bearer $token',
             'Accept': 'application/json',
@@ -96,13 +96,22 @@ class WebsocketService {
     int sosId,
     Function(dynamic) onDataReceived,
   ) {
-    if (echo == null) {
-      debugPrint("⚠️ listenToEmergencyLocation: echo belum init");
+    if (_pusher != null) {
+      final channelName = 'private-sos.$sosId';
+      debugPrint("👂 Listening private channel: $channelName");
+      final channel = _pusher!.subscribe(channelName);
+      channel.bind('LocationUpdated', (event) => onDataReceived(event));
+      channel.bind('RelawanLocationUpdate', (event) => onDataReceived(event));
       return;
     }
 
-    debugPrint("👂 Listening channel: emergency.tracking.$sosId");
-    echo!.channel('emergency.tracking.$sosId').listen('.LocationUpdated', (e) {
+    if (echo == null) {
+      debugPrint("⚠️ listenToEmergencyLocation: echo/pusher belum init");
+      return;
+    }
+
+    debugPrint("👂 Listening channel: private-sos.$sosId");
+    echo!.private('sos.$sosId').listen('.LocationUpdated', (e) {
       debugPrint("📍 LocationUpdated diterima untuk SOS #$sosId");
       onDataReceived(e);
     });
@@ -203,6 +212,8 @@ class WebsocketService {
 
   /// Berhenti mendengarkan ketika darurat selesai
   static void stopListeningEmergencyLocation(int sosId) {
+    _pusher?.unsubscribe('private-sos.$sosId');
+    echo?.leave('sos.$sosId');
     echo?.leave('emergency.tracking.$sosId');
   }
 
@@ -512,12 +523,12 @@ class WebsocketService {
       final publicChannel = _pusher!.subscribe(publicChannelName);
       setupChannelBindings(publicChannel, publicChannelName);
 
-      const poskoChannelName = 'posko-channel';
+      const poskoChannelName = 'private-posko-channel';
       debugPrint("👂 Listening posko broadcast channel: $poskoChannelName");
       final poskoChannel = _pusher!.subscribe(poskoChannelName);
       setupChannelBindings(poskoChannel, poskoChannelName);
 
-      const laporanChannelName = 'laporan-channel';
+      const laporanChannelName = 'private-laporan-channel';
       debugPrint("👂 Listening laporan broadcast channel: $laporanChannelName");
       final laporanChannel = _pusher!.subscribe(laporanChannelName);
       setupChannelBindings(laporanChannel, laporanChannelName);
@@ -535,7 +546,10 @@ class WebsocketService {
       }
     }
     _pusher?.unsubscribe('private-relawan-channel');
+    _pusher?.unsubscribe('relawan-channel');
+    _pusher?.unsubscribe('private-posko-channel');
     _pusher?.unsubscribe('posko-channel');
+    _pusher?.unsubscribe('private-laporan-channel');
     _pusher?.unsubscribe('laporan-channel');
     _isBroadcastChannelSubscribed = false;
   }

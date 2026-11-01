@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:sahabat_sos_mobile/core/di/injection.dart';
 import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
 import 'package:sahabat_sos_mobile/core/theme/accessible_colors.dart';
+import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 import '../../data/models/tuya_device_model.dart';
 import '../../data/models/tuya_dp_event_model.dart';
 import '../../data/services/tuya_channel_service.dart';
@@ -121,14 +122,17 @@ class _TuyaDeviceDetailScreenState extends State<TuyaDeviceDetailScreen> {
       if (mounted) {
         AccessibilityService.instance.hapticMedium();
         unawaited(
-          AccessibilityService.instance
-              .speak('Gagal mengirim sinyal uji coba: $e'),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal: $e'),
-            backgroundColor: const Color(0xFFDC2626),
+          AccessibilityService.instance.speak(
+            AppErrorHandler.getFriendlyTtsMessage(
+              e,
+              prefix: 'Gagal mengirim sinyal uji coba',
+            ),
           ),
+        );
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          e,
+          prefix: 'Gagal mengirim sinyal uji coba',
         );
       }
     } finally {
@@ -159,13 +163,17 @@ class _TuyaDeviceDetailScreenState extends State<TuyaDeviceDetailScreen> {
         setState(() => _isLoading = false);
         AccessibilityService.instance.hapticMedium();
         unawaited(
-          AccessibilityService.instance.speak('Gagal menghapus perangkat: $e'),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal menghapus perangkat: $e'),
-            backgroundColor: const Color(0xFFDC2626),
+          AccessibilityService.instance.speak(
+            AppErrorHandler.getFriendlyTtsMessage(
+              e,
+              prefix: 'Gagal menghapus perangkat',
+            ),
           ),
+        );
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          e,
+          prefix: 'Gagal menghapus perangkat',
         );
       }
     }

@@ -4,6 +4,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/errors/app_error_handler.dart';
 
 abstract class ProfileRemoteDataSource {
   Future<Map<String, dynamic>> getProfile();
@@ -71,14 +72,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         return _parseResponse(response.data);
       } else {
         throw Exception(
-          response.data?['message'] ??
-              'Gagal mengambil profil. Status: ${response.statusCode}',
+          response.data is Map && response.data['message'] != null
+              ? response.data['message']
+              : 'Gagal memuat data profil.',
         );
       }
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data?['message'] ??
-            'Gagal mengambil profil: ${e.message}',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal memuat profil pengguna.',
+        ),
       );
     }
   }
@@ -95,14 +99,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         return _parseResponse(response.data);
       } else {
         throw Exception(
-          response.data?['message'] ??
-              'Gagal mengambil profil user. Status: ${response.statusCode}',
+          response.data is Map && response.data['message'] != null
+              ? response.data['message']
+              : 'Gagal memuat data pengguna.',
         );
       }
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data?['message'] ??
-            'Gagal mengambil profil user: ${e.message}',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal memuat profil akun.',
+        ),
       );
     }
   }
@@ -120,14 +127,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         return _parseResponse(response.data);
       } else {
         throw Exception(
-          response.data?['message'] ??
-              'Gagal memperbarui profil. Status: ${response.statusCode}',
+          response.data is Map && response.data['message'] != null
+              ? response.data['message']
+              : 'Gagal memperbarui profil.',
         );
       }
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data?['message'] ??
-            'Gagal memperbarui profil: ${e.message}',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal memperbarui profil pengguna.',
+        ),
       );
     }
   }
@@ -165,14 +175,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         return _parseResponse(response.data);
       } else {
         throw Exception(
-          response.data?['message'] ??
-              'Gagal memperbarui profil dan foto. Status: ${response.statusCode}',
+          response.data is Map && response.data['message'] != null
+              ? response.data['message']
+              : 'Gagal memperbarui profil dan foto.',
         );
       }
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data?['message'] ??
-            'Gagal memperbarui profil dan foto: ${e.message}',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal memperbarui profil dan foto pengguna.',
+        ),
       );
     }
   }
@@ -201,14 +214,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         return _parseResponse(response.data);
       } else {
         throw Exception(
-          response.data?['message'] ??
-              'Gagal mengupload foto. Status: ${response.statusCode}',
+          response.data is Map && response.data['message'] != null
+              ? response.data['message']
+              : 'Gagal mengunggah foto profil.',
         );
       }
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data?['message'] ??
-            'Gagal mengupload foto: ${e.message}',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal mengunggah foto profil.',
+        ),
       );
     }
   }
@@ -225,14 +241,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         return _parseResponse(response.data);
       } else {
         throw Exception(
-          response.data?['message'] ??
-              'Gagal menghapus foto. Status: ${response.statusCode}',
+          response.data is Map && response.data['message'] != null
+              ? response.data['message']
+              : 'Gagal menghapus foto profil.',
         );
       }
     } on DioException catch (e) {
       throw Exception(
-        e.response?.data?['message'] ??
-            'Gagal menghapus foto: ${e.message}',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal menghapus foto profil.',
+        ),
       );
     }
   }

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/errors/app_error_handler.dart';
 
 abstract class HistoryRemoteDataSource {
   Future<Map<String, dynamic>> getHistory({
@@ -71,7 +72,10 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
     } on DioException catch (e) {
       debugPrint('DioException getHistory: ${e.message}');
       throw Exception(
-        e.response?.data?['message'] ?? 'Gagal memuat daftar riwayat',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal memuat daftar riwayat',
+        ),
       );
     }
   }
@@ -97,7 +101,10 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
     } on DioException catch (e) {
       debugPrint('DioException getSosHistory: ${e.message}');
       throw Exception(
-        e.response?.data?['message'] ?? 'Gagal memuat riwayat SOS',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal memuat riwayat SOS',
+        ),
       );
     }
   }
@@ -127,7 +134,10 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
     } on DioException catch (e) {
       debugPrint('DioException getDetail: ${e.message}');
       throw Exception(
-        e.response?.data?['message'] ?? 'Gagal memuat detail riwayat',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal memuat detail riwayat',
+        ),
       );
     }
   }
@@ -159,13 +169,18 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
 
       if (response.statusCode != 200) {
         throw Exception(
-          response.data?['message'] ?? 'Gagal memperbarui status',
+          response.data is Map && response.data['message'] != null
+              ? response.data['message']
+              : 'Gagal memperbarui status',
         );
       }
     } on DioException catch (e) {
       debugPrint('DioException updateStatus: ${e.message}');
       throw Exception(
-        e.response?.data?['message'] ?? 'Gagal memperbarui status',
+        AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal memperbarui status',
+        ),
       );
     }
   }

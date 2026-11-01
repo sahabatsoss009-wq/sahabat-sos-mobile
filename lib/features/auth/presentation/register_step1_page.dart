@@ -9,6 +9,7 @@ import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
 import 'package:sahabat_sos_mobile/core/theme/accessible_colors.dart';
 import 'package:sahabat_sos_mobile/core/widgets/google_logo.dart';
 import 'package:sahabat_sos_mobile/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 
 class RegisterStep1Page extends StatefulWidget {
   const RegisterStep1Page({super.key});
@@ -354,9 +355,11 @@ class _RegisterStep1PageState extends State<RegisterStep1Page> {
                     setState(() {
                       _isLoading = false;
                     });
-                    ScaffoldMessenger.of(
+                    AppErrorHandler.showErrorSnackBar(
                       context,
-                    ).showSnackBar(SnackBar(content: Text('Gagal Registrasi: $e')));
+                      e,
+                      prefix: 'Gagal Registrasi',
+                    );
                   }
                 },
           child: Padding(

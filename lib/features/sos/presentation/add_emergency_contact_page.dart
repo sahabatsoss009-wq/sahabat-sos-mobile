@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:sahabat_sos_mobile/core/di/injection.dart';
 import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
 import 'package:sahabat_sos_mobile/core/theme/accessible_colors.dart';
+import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 import '../data/datasources/emergency_contact_remote_data_source.dart';
 
 class AddEmergencyContactPage extends StatefulWidget {
@@ -92,11 +93,10 @@ class _AddEmergencyContactPageState extends State<AddEmergencyContactPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: const Color(0xFFDC2626),
-          ),
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          e,
+          prefix: isEdit ? 'Gagal memperbarui kontak' : 'Gagal menambahkan kontak',
         );
       }
     }

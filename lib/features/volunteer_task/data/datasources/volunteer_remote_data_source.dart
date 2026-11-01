@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/errors/app_error_handler.dart';
 
 abstract class VolunteerRemoteDataSource {
   Future<Map<String, dynamic>> getRelawanProfile();
@@ -34,6 +35,10 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
 
   VolunteerRemoteDataSourceImpl({required this.dio, required this.prefs});
 
+  String _errMsg(dynamic e, String fallback) {
+    return AppErrorHandler.getFriendlyMessage(e, defaultMessage: fallback);
+  }
+
   Map<String, dynamic> _getHeaders() {
     final token = prefs.getString('auth_token');
     return {'Authorization': 'Bearer $token', 'Accept': 'application/json'};
@@ -54,11 +59,7 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ??
-            e.message ??
-            'Gagal mengambil profil relawan',
-      );
+      throw Exception(_errMsg(e, 'Gagal mengambil profil relawan'));
     }
   }
 
@@ -77,11 +78,7 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ??
-            e.message ??
-            'Gagal mengambil daftar SOS aktif',
-      );
+      throw Exception(_errMsg(e, 'Gagal mengambil daftar SOS aktif'));
     }
   }
 
@@ -100,11 +97,7 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ??
-            e.message ??
-            'Gagal mengambil tugas SOS',
-      );
+      throw Exception(_errMsg(e, 'Gagal mengambil tugas SOS'));
     }
   }
 
@@ -128,11 +121,7 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ??
-            e.message ??
-            'Gagal mengupdate status SOS',
-      );
+      throw Exception(_errMsg(e, 'Gagal mengupdate status SOS'));
     }
   }
 
@@ -150,9 +139,7 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
         throw Exception(response.data['message'] ?? 'Gagal menolak SOS');
       }
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ?? e.message ?? 'Gagal menolak SOS',
-      );
+      throw Exception(_errMsg(e, 'Gagal menolak SOS'));
     }
   }
 
@@ -171,11 +158,7 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ??
-            e.message ??
-            'Gagal mengambil data beranda',
-      );
+      throw Exception(_errMsg(e, 'Gagal mengambil data beranda'));
     }
   }
 
@@ -194,11 +177,7 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ??
-            e.message ??
-            'Gagal mengambil riwayat beranda relawan',
-      );
+      throw Exception(_errMsg(e, 'Gagal mengambil riwayat beranda relawan'));
     }
   }
 
@@ -218,11 +197,7 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ??
-            e.message ??
-            'Gagal memperbarui status ketersediaan',
-      );
+      throw Exception(_errMsg(e, 'Gagal memperbarui status ketersediaan'));
     }
   }
 
@@ -252,11 +227,7 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ??
-            e.message ??
-            'Gagal menghubungi kontak darurat',
-      );
+      throw Exception(_errMsg(e, 'Gagal menghubungi kontak darurat'));
     }
   }
 
@@ -308,11 +279,7 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
       }
       return result;
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ??
-            e.message ??
-            'Gagal mengambil SOS aktif',
-      );
+      throw Exception(_errMsg(e, 'Gagal mengambil SOS aktif'));
     }
   }
 
@@ -363,11 +330,7 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
       }
       return result;
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ??
-            e.message ??
-            'Gagal mengambil laporan aktif',
-      );
+      throw Exception(_errMsg(e, 'Gagal mengambil laporan aktif'));
     }
   }
 
@@ -385,15 +348,13 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
       );
       if (response.statusCode != 200) {
         throw Exception(
-          response.data['message'] ?? 'Gagal memperbarui status laporan',
+          response.data is Map && response.data['message'] != null
+              ? response.data['message']
+              : 'Gagal memperbarui status laporan',
         );
       }
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ??
-            e.message ??
-            'Gagal memperbarui status laporan',
-      );
+      throw Exception(_errMsg(e, 'Gagal memperbarui status laporan'));
     }
   }
 
@@ -418,11 +379,7 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
         throw Exception('Rute navigasi tidak ditemukan');
       }
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data?['message'] ??
-            e.message ??
-            'Gagal mengambil rute navigasi',
-      );
+      throw Exception(_errMsg(e, 'Gagal mengambil rute navigasi'));
     }
   }
 }

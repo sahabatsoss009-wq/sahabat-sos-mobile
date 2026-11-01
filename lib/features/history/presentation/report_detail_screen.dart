@@ -11,6 +11,7 @@ import 'package:sahabat_sos_mobile/core/constants/api_constants.dart';
 import 'package:sahabat_sos_mobile/core/di/injection.dart';
 import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
 import 'package:sahabat_sos_mobile/core/theme/accessible_colors.dart';
+import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 import '../data/datasources/history_remote_data_source.dart';
 import 'history_screen.dart';
 
@@ -276,11 +277,10 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: const Color(0xFFDC2626),
-          ),
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          e,
+          prefix: 'Gagal memperbarui status',
         );
       }
     }

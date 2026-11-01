@@ -15,6 +15,7 @@ import 'package:sahabat_sos_mobile/core/services/location_service.dart';
 import 'package:sahabat_sos_mobile/core/services/websocket_service.dart';
 import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
 import 'package:sahabat_sos_mobile/core/theme/accessible_colors.dart';
+import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 import 'package:sahabat_sos_mobile/core/utils/global_event_bus.dart' as event_bus;
 import 'package:sahabat_sos_mobile/features/volunteer_task/data/datasources/volunteer_remote_data_source.dart';
 import 'package:sahabat_sos_mobile/features/volunteer_task/presentation/volunteer_active_task_page.dart';
@@ -1472,10 +1473,10 @@ class VolunteerMapPageState extends State<VolunteerMapPage>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Terjadi kesalahan: $e'),
-          ),
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          e,
+          prefix: 'Gagal merespons tugas',
         );
       }
     }

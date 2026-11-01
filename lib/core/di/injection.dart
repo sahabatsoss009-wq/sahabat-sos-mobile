@@ -13,6 +13,9 @@ import '../services/location_service.dart';
 import '../services/accessibility_service.dart';
 import '../services/sos_rejection_storage.dart';
 import '../services/health_connect_service.dart';
+import '../errors/app_error_handler.dart';
+import '../../routing/app_router.dart';
+import '../../routing/routes.dart';
 import '../../features/tuya_device/data/services/tuya_channel_service.dart';
 import '../../features/tuya_device/data/services/emergency_trigger_service.dart';
 import '../../features/tuya_device/data/services/tuya_background_listener.dart';
@@ -28,15 +31,61 @@ Future<void> initInjection() async {
   sl.registerLazySingleton<AccessibilityService>(
     () => AccessibilityService.instance,
   );
-  sl.registerLazySingleton(
-    () => Dio(
+  sl.registerLazySingleton<Dio>(() {
+    final dio = Dio(
       BaseOptions(
-        connectTimeout: const Duration(seconds: 60),
-        receiveTimeout: const Duration(seconds: 60),
-        sendTimeout: const Duration(seconds: 60),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 30),
+        headers: {
+          'Accept': 'application/json',
+        },
       ),
-    ),
-  );
+    );
+
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final prefs = sl<SharedPreferences>();
+          final token = prefs.getString('auth_token');
+          if (token != null &&
+              token.isNotEmpty &&
+              !options.headers.containsKey('Authorization')) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+        onError: (DioException err, handler) async {
+          final reqPath = err.requestOptions.path;
+          final isAuthEndpoint = reqPath.contains('/auth/login') ||
+              reqPath.contains('/auth/google') ||
+              reqPath.contains('/auth/register') ||
+              reqPath.contains('/auth/send-otp') ||
+              reqPath.contains('/auth/verify-otp');
+
+          if (!isAuthEndpoint && err.response?.statusCode == 401) {
+            final prefs = sl<SharedPreferences>();
+            final currentToken = prefs.getString('auth_token');
+            if (currentToken != null) {
+              await prefs.remove('auth_token');
+              await prefs.remove('user_role');
+              final context = AppRouter.navigatorKey.currentContext;
+              if (context != null && context.mounted) {
+                AppErrorHandler.showErrorSnackBar(
+                  context,
+                  'Sesi login Anda telah berakhir demi keamanan. Silakan masuk kembali.',
+                );
+              }
+              AppRouter.router.go(AppRoutes.login);
+            }
+          }
+          return handler.next(err);
+        },
+      ),
+    );
+
+    return dio;
+  });
 
   // Data sources
   sl.registerLazySingleton<AuthRemoteDataSource>(

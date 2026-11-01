@@ -8,6 +8,7 @@ import 'package:sahabat_sos_mobile/core/di/injection.dart';
 import 'package:sahabat_sos_mobile/core/services/websocket_service.dart';
 import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
 import 'package:sahabat_sos_mobile/core/theme/accessible_colors.dart';
+import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 import '../data/datasources/history_remote_data_source.dart';
 import 'report_detail_screen.dart';
 
@@ -264,7 +265,10 @@ class _HistoryPageState extends State<HistoryPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        _errorMessage = AppErrorHandler.getFriendlyMessage(
+          e,
+          defaultMessage: 'Gagal memuat riwayat',
+        );
         _isLoading = false;
       });
     }

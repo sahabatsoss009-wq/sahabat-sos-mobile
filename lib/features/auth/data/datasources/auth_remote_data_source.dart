@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/errors/app_error_handler.dart';
 
 abstract class AuthRemoteDataSource {
   /// Mengembalikan Map berisi token JWT dan status is_profile_complete, atau null jika dibatalkan
@@ -114,7 +115,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
     } on DioException catch (e) {
       debugPrint("DioException Google Sign-In: ${e.response?.data}");
-      final msg = e.response?.data?['message'] ?? e.message ?? 'Gagal memverifikasi akun ke server.';
+      final msg = AppErrorHandler.getFriendlyMessage(
+        e,
+        defaultMessage: 'Gagal memverifikasi akun ke server.',
+      );
       throw Exception(msg);
     } catch (e) {
       debugPrint("Error Google Sign-In: $e");
@@ -152,8 +156,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception(response.data['message'] ?? 'Registrasi gagal');
       }
     } on DioException catch (e) {
-      final msg =
-          e.response?.data?['message'] ?? e.message ?? 'Registrasi gagal';
+      final msg = AppErrorHandler.getFriendlyMessage(
+        e,
+        defaultMessage: 'Registrasi gagal. Mohon periksa kembali data Anda.',
+      );
       throw Exception(msg);
     }
   }
@@ -186,7 +192,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception(response.data['message'] ?? 'Login gagal');
       }
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] ?? e.message ?? 'Login gagal';
+      final msg = AppErrorHandler.getFriendlyMessage(
+        e,
+        defaultMessage: 'Login gagal. Silakan coba kembali.',
+      );
       throw Exception(msg);
     }
   }
@@ -206,8 +215,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception(response.data['message'] ?? 'Gagal mengirim OTP');
       }
     } on DioException catch (e) {
-      final msg =
-          e.response?.data?['message'] ?? e.message ?? 'Gagal mengirim OTP';
+      final msg = AppErrorHandler.getFriendlyMessage(
+        e,
+        defaultMessage: 'Gagal mengirim kode OTP.',
+      );
       throw Exception(msg);
     }
   }
@@ -239,8 +250,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception(response.data['message'] ?? 'Verifikasi OTP gagal');
       }
     } on DioException catch (e) {
-      final msg =
-          e.response?.data?['message'] ?? e.message ?? 'Verifikasi OTP gagal';
+      final msg = AppErrorHandler.getFriendlyMessage(
+        e,
+        defaultMessage: 'Verifikasi kode OTP gagal.',
+      );
       throw Exception(msg);
     }
   }

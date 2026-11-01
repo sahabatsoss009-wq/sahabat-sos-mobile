@@ -13,6 +13,7 @@ import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
 import 'package:sahabat_sos_mobile/core/theme/accessible_colors.dart';
 import 'package:sahabat_sos_mobile/core/utils/global_event_bus.dart' as event_bus;
 import 'package:sahabat_sos_mobile/core/widgets/google_logo.dart';
+import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -256,10 +257,11 @@ class _LoginPageState extends State<LoginPage> {
                     setState(() {
                       _isLoading = false;
                     });
-                    final errorMessage = e.toString().replaceFirst('Exception: ', '');
-                    ScaffoldMessenger.of(
+                    AppErrorHandler.showErrorSnackBar(
                       context,
-                    ).showSnackBar(SnackBar(content: Text('Gagal Login: $errorMessage')));
+                      e,
+                      prefix: 'Gagal Masuk',
+                    );
                   }
                 },
           child: SizedBox(

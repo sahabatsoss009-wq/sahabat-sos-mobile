@@ -8,6 +8,7 @@ import 'package:sahabat_sos_mobile/core/di/injection.dart';
 import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
 import 'package:sahabat_sos_mobile/core/services/location_service.dart';
 import 'package:sahabat_sos_mobile/core/theme/accessible_colors.dart';
+import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 import 'package:sahabat_sos_mobile/core/utils/global_event_bus.dart'
     as import_event_bus;
 import 'package:sahabat_sos_mobile/features/volunteer_task/data/datasources/volunteer_remote_data_source.dart';
@@ -563,8 +564,10 @@ class _VolunteerActiveTaskPageState extends State<VolunteerActiveTaskPage> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menghubungi kontak darurat: $e')),
+      AppErrorHandler.showErrorSnackBar(
+        context,
+        e,
+        prefix: 'Gagal menghubungi kontak darurat',
       );
     }
   }
@@ -595,8 +598,10 @@ class _VolunteerActiveTaskPageState extends State<VolunteerActiveTaskPage> {
       _isCompleting = false;
       _sliderKey.currentState?.reset();
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text('Gagal menyelesaikan tugas: $e')),
+      AppErrorHandler.showErrorSnackBar(
+        context,
+        e,
+        prefix: 'Gagal menyelesaikan tugas',
       );
     }
   }

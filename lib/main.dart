@@ -29,6 +29,46 @@ void main() async {
     return true; // Cegah app force close
   };
 
+  // Tampilan fallback ramah pengguna jika terjadi error rendering widget di release mode
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return const Material(
+      color: Color(0xFFF8FAFC),
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                size: 48,
+                color: Color(0xFFDC2626),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Tampilan Mengalami Kendala',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              SizedBox(height: 6),
+              Text(
+                'Terjadi kendala saat memuat bagian ini. Silakan muat ulang halaman atau buka kembali aplikasi.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  };
+
   try {
     await initInjection();
   } catch (e) {

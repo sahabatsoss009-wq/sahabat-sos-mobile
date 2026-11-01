@@ -9,6 +9,7 @@ import 'package:sahabat_sos_mobile/routing/routes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
 import 'package:sahabat_sos_mobile/core/theme/accessible_colors.dart';
+import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 import 'package:sahabat_sos_mobile/core/utils/global_event_bus.dart' as import_event_bus;
 
 class VolunteerTaskListPage extends StatefulWidget {
@@ -313,8 +314,10 @@ class _VolunteerTaskListPageState extends State<VolunteerTaskListPage>
     } catch (e) {
       if (mounted) Navigator.pop(context);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengambil tugas: $e')),
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          e,
+          prefix: 'Gagal mengambil tugas',
         );
       }
     }

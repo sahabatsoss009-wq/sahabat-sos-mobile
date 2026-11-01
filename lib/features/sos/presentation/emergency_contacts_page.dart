@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:sahabat_sos_mobile/core/di/injection.dart';
 import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
 import 'package:sahabat_sos_mobile/core/theme/accessible_colors.dart';
+import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 import 'package:sahabat_sos_mobile/routing/routes.dart';
 import '../data/datasources/emergency_contact_remote_data_source.dart';
 
@@ -44,11 +45,10 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: alertRed,
-          ),
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          e,
+          prefix: 'Gagal memuat kontak darurat',
         );
       }
     }
@@ -153,11 +153,10 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: alertRed,
-          ),
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          e,
+          prefix: 'Gagal menghapus kontak',
         );
       }
     }
@@ -175,11 +174,10 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
     } catch (e) {
       await _fetchContacts();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal memperbarui pengaturan notifikasi: $e'),
-            backgroundColor: alertRed,
-          ),
+        AppErrorHandler.showErrorSnackBar(
+          context,
+          e,
+          prefix: 'Gagal memperbarui notifikasi',
         );
       }
     }
