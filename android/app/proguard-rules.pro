@@ -1,5 +1,4 @@
 # App classes
--keep class com.sossahabat.app.** { *; }
 -keep class com.sossahabatsos.app.** { *; }
 
 # Flutter

@@ -1281,7 +1281,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                       urlTemplate:
                                           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                                       userAgentPackageName:
-                                          'com.example.sahabat_sos_mobile',
+                                          'com.sossahabatsos.app',
                                     ),
                                   ),
                                   MarkerLayer(
