@@ -3,6 +3,8 @@ class ApiConstants {
   // Default ke IP Tailscale backend (100.105.166.45:8000)
   static const String defaultBaseUrl = 'http://100.105.166.45:8000/api';
   static const String defaultStorageUrl = 'http://100.105.166.45:8000/storage';
+  static const String defaultGoogleClientId =
+      '359438013693-ekg917ffbk40nom3g7tomm4nddav1me0.apps.googleusercontent.com';
 
   // Mendukung String.fromEnvironment:
   // e.g. flutter run --dart-define=API_BASE_URL=http://100.105.166.45:8000/api
@@ -10,10 +12,15 @@ class ApiConstants {
   static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
   static const String _altEnvBaseUrl = String.fromEnvironment('BASE_URL');
   static const String _envStorageUrl = String.fromEnvironment('STORAGE_URL');
+  static const String _envGoogleClientId =
+      String.fromEnvironment('GOOGLE_CLIENT_ID');
+  static const String _envGoogleServerClientId =
+      String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
 
   // Override runtime fleksibel jika ingin diatur secara dinamis melalui config / .env file
   static String? _customBaseUrl;
   static String? _customStorageUrl;
+  static String? _customGoogleClientId;
 
   /// Mengatur baseUrl secara runtime (misalnya dari file konfigurasi .env atau preferensi pengguna)
   static void setBaseUrl(String url, {String? customStorageUrl}) {
@@ -53,9 +60,25 @@ class ApiConstants {
           setBaseUrl(value);
         } else if (key == 'STORAGE_URL') {
           _customStorageUrl = value;
+        } else if (key == 'GOOGLE_CLIENT_ID' || key == 'GOOGLE_SERVER_CLIENT_ID') {
+          _customGoogleClientId = value;
         }
       }
     }
+  }
+
+  /// Google OAuth Client ID aktif (Web / Server Client ID)
+  static String get googleClientId {
+    if (_customGoogleClientId != null && _customGoogleClientId!.isNotEmpty) {
+      return _customGoogleClientId!;
+    }
+    if (_envGoogleServerClientId.isNotEmpty) {
+      return _envGoogleServerClientId;
+    }
+    if (_envGoogleClientId.isNotEmpty) {
+      return _envGoogleClientId;
+    }
+    return defaultGoogleClientId;
   }
 
   /// Base URL aktif (prioritas: runtime override -> --dart-define/env -> default)
