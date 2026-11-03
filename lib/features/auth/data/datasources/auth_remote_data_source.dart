@@ -29,13 +29,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final SharedPreferences prefs;
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    // Di Android, clientId HARUS null (Google Play Services mendeteksi via Package Name + SHA-1)
+    // Di Android, clientId HARUS null (Google Play Services mendeteksi via Package Name + SHA-1 yang didaftarkan di Client ID Android)
     clientId: kIsWeb
-        ? '757209543690-bpjk959q2se7oq0eos1olm6urg35oicp.apps.googleusercontent.com'
+        ? '859623422441-eooutsguej856og6c0cjoidcav0fr5lr.apps.googleusercontent.com'
         : null,
-    // Server Client ID (WAJIB Web Client ID) agar Android bisa minta Token/idToken ke backend
+    // serverClientId HARUS Web Client ID (bukan Android Client ID), agar Google mengeluarkan id_token untuk server backend
     serverClientId:
-        '757209543690-bpjk959q2se7oq0eos1olm6urg35oicp.apps.googleusercontent.com',
+        '859623422441-eooutsguej856og6c0cjoidcav0fr5lr.apps.googleusercontent.com',
     scopes: ['email', 'profile'],
   );
 

@@ -4,6 +4,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sahabat_sos_mobile/routing/routes.dart';
 import 'package:get_it/get_it.dart' as get_it;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+import 'package:sahabat_sos_mobile/core/constants/api_constants.dart';
+import 'package:sahabat_sos_mobile/core/utils/global_event_bus.dart' as event_bus;
 import 'package:sahabat_sos_mobile/features/auth/data/datasources/auth_remote_data_source.dart';
 
 class RegisterStep1Page extends StatefulWidget {
@@ -66,7 +70,9 @@ class _RegisterStep1PageState extends State<RegisterStep1Page> {
                           ),
                           const SizedBox(height: 20),
                           _buildGoogleCard(),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 16),
+                          _buildDemoButtons(),
+                          const SizedBox(height: 24),
                           _buildTermsCheckbox(),
                           const Spacer(),
                           const SizedBox(height: 20),
@@ -320,6 +326,151 @@ class _RegisterStep1PageState extends State<RegisterStep1Page> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _loginDemo(String email, String password) async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final authDataSource = get_it.GetIt.instance<AuthRemoteDataSource>();
+      final result = await authDataSource.loginWithEmail(
+        email: email,
+        password: password,
+      );
+      if (!mounted) return;
+
+      final token = result['token'];
+      final prefs = get_it.GetIt.instance<SharedPreferences>();
+
+      final dio = get_it.GetIt.instance<Dio>();
+      final profileRes = await dio.get(
+        ApiConstants.me,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (profileRes.statusCode == 200 && profileRes.data['user'] != null) {
+        final userData = profileRes.data['user'];
+        final role = userData['role'].toString().toLowerCase();
+        await prefs.setString('user_role', role);
+        if (role == 'relawan') {
+          if (userData['id'] != null) {
+            await prefs.setInt(
+              'volunteer_id',
+              (userData['id'] is int)
+                  ? userData['id']
+                  : int.tryParse(userData['id'].toString()) ?? 0,
+            );
+          }
+          final verificationStatus =
+              (userData['status_verifikasi'] ?? 'pending').toString().toLowerCase();
+          await prefs.setString('verification_status', verificationStatus);
+          event_bus.GlobalEventBus.volunteerVerificationStatus.value =
+              (verificationStatus == 'terverifikasi');
+          final isActive = (userData['is_active'] == true ||
+              userData['is_active'] == 1 ||
+              userData['is_active'] == '1');
+          await prefs.setBool('user_is_active', isActive);
+          event_bus.GlobalEventBus.volunteerActiveStatus.value = isActive;
+          if (!mounted) return;
+          context.go(AppRoutes.homeVolunteer);
+        } else {
+          if (!mounted) return;
+          context.go(AppRoutes.dashboard);
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal Login: $msg')),
+      );
+    }
+  }
+
+  Widget _buildDemoButtons() {
+    return Column(
+      children: [
+        Row(
+          children: const [
+            Expanded(child: Divider(color: Color(0xFFD1D5DB))),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                'ATAU LOGIN PENGUJIAN',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF9CA3AF),
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
+            Expanded(child: Divider(color: Color(0xFFD1D5DB))),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _isLoading
+                    ? null
+                    : () => _loginDemo('budi@sahabatsos.test', 'password123'),
+                icon: const Icon(CupertinoIcons.person_fill, size: 16),
+                label: const Text(
+                  'Pengguna\n(Budi)',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF006D77),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _isLoading
+                    ? null
+                    : () => _loginDemo('relawan1@sahabatsos.test', 'password123'),
+                icon: const Icon(CupertinoIcons.shield_fill, size: 16),
+                label: const Text(
+                  'Relawan\n(Rian)',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0E9F6E),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

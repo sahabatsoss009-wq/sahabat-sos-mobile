@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.sossahabat.app"
+        applicationId = "com.sossahabat.dev"
         minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

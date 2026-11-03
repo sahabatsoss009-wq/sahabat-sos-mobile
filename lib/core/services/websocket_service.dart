@@ -24,15 +24,24 @@ class WebsocketService {
   static Echo? echo;
   static PusherClient? _pusher;
 
+  static void disconnect() {
+    try {
+      _pusher?.disconnect();
+    } catch (e) {
+      debugPrint("WebSocket disconnect error: $e");
+    }
+    echo = null;
+    _pusher = null;
+  }
+
   static Future<void> init(String token) async {
     if (echo != null) return;
 
     final uri = Uri.parse(ApiConstants.baseUrl);
-    // Host dan port diambil dari baseUrl (misal: 192.168.1.22)
+    // Host diambil dari baseUrl (misal: localhost atau IP Wi-Fi)
     final host = uri.host;
-    // Laravel Reverb default berjalan di port 8080
-    // Sesuaikan jika kamu menggunakan port lain di .env backend (REVERB_PORT)
-    const int reverbPort = 8080;
+    // Laravel Reverb port disamakan dengan REVERB_PORT di .env backend (8081)
+    const int reverbPort = 8081;
 
     try {
       final options = PusherOptions(
@@ -55,7 +64,7 @@ class WebsocketService {
 
         // Auth endpoint untuk private channel
         authOptions: PusherAuthOptions(
-          '${uri.scheme}://$host:${uri.port}/api/broadcasting/auth',
+          '${ApiConstants.baseUrl}/broadcasting/auth',
           headers: () async => {
             'Authorization': 'Bearer $token',
             'Accept': 'application/json',
@@ -276,6 +285,64 @@ class WebsocketService {
       }
     }
 
+    void processLaporanEvent(dynamic event, String channel) {
+      try {
+        if (event == null) return;
+
+        dynamic payload;
+        if (event is Map) {
+          final dataStr = event['data'];
+          if (dataStr is String) {
+            payload = jsonDecode(dataStr);
+          } else {
+            payload = dataStr ?? event;
+          }
+        } else {
+          payload = event;
+        }
+
+        if (payload is Map && payload.containsKey('laporan')) {
+          final lapData = payload['laporan'] is Map
+              ? Map<String, dynamic>.from(payload['laporan'])
+              : <String, dynamic>{};
+          payload.forEach((key, value) {
+            if (key != 'laporan') {
+              lapData[key] = value;
+            }
+          });
+          payload = lapData;
+        }
+
+        if (payload is Map) {
+          final payloadMap = Map<String, dynamic>.from(payload);
+          final dynamic rawId = payloadMap['id'];
+          final int lapId =
+              (rawId is int) ? rawId : int.tryParse(rawId?.toString() ?? '0') ?? 0;
+
+          if (lapId > 0) {
+            final key = lapId + 100000;
+            if (_recentlyNotifiedSosIds.contains(key)) {
+              debugPrint("ℹ️ Laporan #$lapId sudah dinotifikasikan baru-baru ini.");
+              return;
+            }
+            _recentlyNotifiedSosIds.add(key);
+            Future.delayed(const Duration(seconds: 15), () {
+              _recentlyNotifiedSosIds.remove(key);
+            });
+          }
+
+          // Tampilkan Heads-up Notification laporan di HP relawan
+          NotificationService().showLaporanNotification(payloadMap);
+        }
+
+        onNewSosReceived(payload);
+      } catch (e) {
+        debugPrint(
+          "❌ Gagal parsing Laporan event dari $channel: $e\nData Asli: $event",
+        );
+      }
+    }
+
     void setupChannelBindings(Channel channel, String channelName) {
       void onSosCreated(dynamic event) {
         debugPrint("🚨 SOSCreated diterima di $channelName");
@@ -296,6 +363,16 @@ class WebsocketService {
       channel.bind('.SOSUpdateStatus', onSosUpdated);
       channel.bind('App\\Events\\SOSUpdateStatus', onSosUpdated);
 
+      void onLaporanCreated(dynamic event) {
+        debugPrint("📋 LaporanCreated diterima di $channelName");
+        processLaporanEvent(event, channelName);
+        GlobalEventBus.refreshMap.value = !GlobalEventBus.refreshMap.value;
+      }
+
+      channel.bind('LaporanCreated', onLaporanCreated);
+      channel.bind('.LaporanCreated', onLaporanCreated);
+      channel.bind('App\\Events\\LaporanCreated', onLaporanCreated);
+
       // Wildcard listener untuk keamanan ekstra
       channel.bind('*', (eventData) {
         if (eventData is Map) {
@@ -304,6 +381,10 @@ class WebsocketService {
           if (eventName.contains('SOSCreated')) {
             debugPrint("🚨 Wildcard match [$eventName] di $channelName");
             processEvent(data, channelName);
+            GlobalEventBus.refreshMap.value = !GlobalEventBus.refreshMap.value;
+          } else if (eventName.contains('LaporanCreated')) {
+            debugPrint("📋 Wildcard match [$eventName] di $channelName");
+            processLaporanEvent(data, channelName);
             GlobalEventBus.refreshMap.value = !GlobalEventBus.refreshMap.value;
           } else if (eventName.contains('SOSUpdateStatus')) {
             debugPrint("🔄 Wildcard match [$eventName] di $channelName - Refreshing Map!");
@@ -326,6 +407,12 @@ class WebsocketService {
     debugPrint("👂 Listening private broadcast channel: $publicChannelName");
     final publicChannel = _pusher!.subscribe(publicChannelName);
     setupChannelBindings(publicChannel, publicChannelName);
+
+    // ─── 3. Channel publik feed laporan ───
+    final laporanChannelName = 'laporan-channel';
+    debugPrint("👂 Listening public laporan channel: $laporanChannelName");
+    final laporanChannel = _pusher!.subscribe(laporanChannelName);
+    setupChannelBindings(laporanChannel, laporanChannelName);
   }
 
   /// Berhenti mendengarkan penugasan SOS baru
@@ -334,5 +421,6 @@ class WebsocketService {
       _pusher?.unsubscribe('private-relawan.$volunteerId');
     }
     _pusher?.unsubscribe('private-relawan-channel');
+    _pusher?.unsubscribe('laporan-channel');
   }
 }

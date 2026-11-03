@@ -1,8 +1,8 @@
 class ApiConstants {
   // Gunakan IP komputer lokal agar bisa diakses oleh HP Fisik di jaringan Wi-Fi yang sama
-  static const String baseUrl = 'http://100.105.166.45:8000/api';
-  static const String storageUrl = 'http://100.105.166.45:8000/storage';
-
+  static const String baseUrl = 'http://localhost:8000/api';
+  static const String storageUrl = 'http://localhost:8000/storage';
+  
   static const String authGoogle = '$baseUrl/auth/google/mobile';
   static const String authRegisterPengguna = '$baseUrl/auth/register/pengguna';
   static const String authRegisterRelawan = '$baseUrl/auth/register/relawan';

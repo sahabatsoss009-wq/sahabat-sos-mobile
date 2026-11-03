@@ -17,6 +17,11 @@ class NotificationService {
   static const String channelDescription =
       'Notifikasi saat ada panggilan SOS masuk';
 
+  static const String laporanChannelId = 'laporan_alert_channel_v1';
+  static const String laporanChannelName = 'Laporan Masuk Warga';
+  static const String laporanChannelDescription =
+      'Notifikasi saat ada laporan baru dari warga';
+
   Future<void> init() async {
     if (_isInitialized) return;
 
@@ -32,9 +37,16 @@ class NotificationService {
           final payload = response.payload;
           if (payload != null && payload.isNotEmpty) {
             try {
-              final sosData = jsonDecode(payload);
-              debugPrint('🔔 Notifikasi diklik, payload: $sosData');
-              GlobalEventBus.showSosAssignmentPopup.value = sosData;
+              final data = jsonDecode(payload);
+              debugPrint('🔔 Notifikasi diklik, payload: $data');
+              if (data is Map<String, dynamic>) {
+                if (data.containsKey('kategori_laporan') || data.containsKey('lokasi_laporan')) {
+                  // Laporan notification diklik -> refresh peta
+                  GlobalEventBus.refreshMap.value = !GlobalEventBus.refreshMap.value;
+                } else {
+                  GlobalEventBus.showSosAssignmentPopup.value = data;
+                }
+              }
             } catch (e) {
               debugPrint('Error parsing notification payload: $e');
             }
@@ -57,6 +69,16 @@ class NotificationService {
           playSound: true,
         );
         await androidPlugin.createNotificationChannel(alertChannel);
+
+        final laporanChannel = AndroidNotificationChannel(
+          laporanChannelId,
+          laporanChannelName,
+          description: laporanChannelDescription,
+          importance: Importance.high,
+          enableVibration: true,
+          playSound: true,
+        );
+        await androidPlugin.createNotificationChannel(laporanChannel);
       }
 
       _isInitialized = true;
@@ -116,6 +138,50 @@ class NotificationService {
       debugPrint('📢 Heads-up Notification SOS #$notifId berhasil ditampilkan untuk: $victimName');
     } catch (e) {
       debugPrint('❌ Gagal menampilkan notifikasi darurat: $e');
+    }
+  }
+
+  Future<void> showLaporanNotification(Map<String, dynamic> laporanData) async {
+    await init();
+
+    try {
+      final dynamic rawId = laporanData['id'];
+      final int notifId =
+          (rawId is int) ? (rawId + 10000) : (int.tryParse(rawId?.toString() ?? '888') ?? 888) + 10000;
+
+      final String kategori = (laporanData['kategori_laporan'] ?? 'Darurat').toString().toUpperCase();
+      final String pelapor = laporanData['pengguna_nama'] ?? 'Warga';
+      final String lokasi = laporanData['lokasi_laporan'] ?? 'di sekitar Anda';
+      final String deskripsi = laporanData['deskripsi'] ?? '';
+
+      final bodyText = deskripsi.isNotEmpty
+          ? '$pelapor melaporkan $kategori di $lokasi: $deskripsi'
+          : '$pelapor melaporkan kejadian $kategori di $lokasi.';
+
+      final notificationDetails = NotificationDetails(
+        android: AndroidNotificationDetails(
+          laporanChannelId,
+          laporanChannelName,
+          channelDescription: laporanChannelDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+          ticker: 'Laporan Masuk',
+          enableVibration: true,
+          playSound: true,
+        ),
+      );
+
+      await _localNotif.show(
+        id: notifId,
+        title: '📋 LAPORAN BARU: $kategori',
+        body: bodyText,
+        notificationDetails: notificationDetails,
+        payload: jsonEncode(laporanData),
+      );
+
+      debugPrint('📢 Heads-up Notification Laporan #$notifId berhasil ditampilkan ($kategori)');
+    } catch (e) {
+      debugPrint('❌ Gagal menampilkan notifikasi laporan: $e');
     }
   }
 
