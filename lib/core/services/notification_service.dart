@@ -17,10 +17,17 @@ class NotificationService {
   static const String channelDescription =
       'Notifikasi saat ada panggilan SOS masuk';
 
+<<<<<<< HEAD
   static const String laporanChannelId = 'laporan_alert_channel_v1';
   static const String laporanChannelName = 'Laporan Masuk Warga';
   static const String laporanChannelDescription =
       'Notifikasi saat ada laporan baru dari warga';
+=======
+  static const String reportChannelId = 'laporan_alert_channel';
+  static const String reportChannelName = 'Laporan Bantuan Komunitas';
+  static const String reportChannelDescription =
+      'Notifikasi saat ada laporan permohonan bantuan cepat dari warga';
+>>>>>>> 403a24feee2e07598e6617b5218949e6922914e8
 
   Future<void> init() async {
     if (_isInitialized) return;
@@ -67,18 +74,30 @@ class NotificationService {
           vibrationPattern:
               Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
           playSound: true,
+          sound: const RawResourceAndroidNotificationSound('siren'),
         );
         await androidPlugin.createNotificationChannel(alertChannel);
 
+<<<<<<< HEAD
         final laporanChannel = AndroidNotificationChannel(
           laporanChannelId,
           laporanChannelName,
           description: laporanChannelDescription,
+=======
+        const reportChannel = AndroidNotificationChannel(
+          reportChannelId,
+          reportChannelName,
+          description: reportChannelDescription,
+>>>>>>> 403a24feee2e07598e6617b5218949e6922914e8
           importance: Importance.high,
           enableVibration: true,
           playSound: true,
         );
+<<<<<<< HEAD
         await androidPlugin.createNotificationChannel(laporanChannel);
+=======
+        await androidPlugin.createNotificationChannel(reportChannel);
+>>>>>>> 403a24feee2e07598e6617b5218949e6922914e8
       }
 
       _isInitialized = true;
@@ -123,6 +142,7 @@ class NotificationService {
           vibrationPattern:
               Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
           playSound: true,
+          sound: const RawResourceAndroidNotificationSound('siren'),
           category: AndroidNotificationCategory.alarm,
         ),
       );
@@ -146,6 +166,7 @@ class NotificationService {
 
     try {
       final dynamic rawId = laporanData['id'];
+<<<<<<< HEAD
       final int notifId =
           (rawId is int) ? (rawId + 10000) : (int.tryParse(rawId?.toString() ?? '888') ?? 888) + 10000;
 
@@ -166,6 +187,28 @@ class NotificationService {
           importance: Importance.high,
           priority: Priority.high,
           ticker: 'Laporan Masuk',
+=======
+      final int notifId = (rawId is int)
+          ? rawId
+          : int.tryParse(rawId?.toString() ?? '888') ?? 888;
+
+      final String reporterName = laporanData['pengguna_nama'] ??
+          (laporanData['pengguna'] is Map
+              ? laporanData['pengguna']['name']
+              : null) ??
+          'Warga';
+      final String kategori =
+          laporanData['kategori_laporan'] ?? 'Bantuan Cepat';
+      final String lokasi = laporanData['lokasi_laporan'] ?? '';
+
+      const notificationDetails = NotificationDetails(
+        android: AndroidNotificationDetails(
+          reportChannelId,
+          reportChannelName,
+          channelDescription: reportChannelDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+>>>>>>> 403a24feee2e07598e6617b5218949e6922914e8
           enableVibration: true,
           playSound: true,
         ),
@@ -173,13 +216,22 @@ class NotificationService {
 
       await _localNotif.show(
         id: notifId,
+<<<<<<< HEAD
         title: '📋 LAPORAN BARU: $kategori',
         body: bodyText,
+=======
+        title: '📋 Laporan Bantuan Baru: $kategori',
+        body: '$reporterName membutuhkan pendampingan di $lokasi',
+>>>>>>> 403a24feee2e07598e6617b5218949e6922914e8
         notificationDetails: notificationDetails,
         payload: jsonEncode(laporanData),
       );
 
+<<<<<<< HEAD
       debugPrint('📢 Heads-up Notification Laporan #$notifId berhasil ditampilkan ($kategori)');
+=======
+      debugPrint('📢 Notification Laporan #$notifId berhasil ditampilkan');
+>>>>>>> 403a24feee2e07598e6617b5218949e6922914e8
     } catch (e) {
       debugPrint('❌ Gagal menampilkan notifikasi laporan: $e');
     }

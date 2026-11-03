@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +8,10 @@ import 'package:sahabat_sos_mobile/features/auth/data/datasources/auth_remote_da
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sahabat_sos_mobile/core/constants/api_constants.dart';
+import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
+import 'package:sahabat_sos_mobile/core/theme/accessible_colors.dart';
 import 'package:sahabat_sos_mobile/core/utils/global_event_bus.dart' as event_bus;
+import 'package:sahabat_sos_mobile/core/widgets/google_logo.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,126 +25,115 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: const Color(0xFFF5F6F8),
-      resizeToAvoidBottomInset: false,
-      body: Container(
-        color: const Color(0xFFF5F6F8),
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 20,
-                    ),
-                    child: IntrinsicHeight(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildTopBar(),
-                          const SizedBox(height: 24),
-                          Center(
-                            child: Image.asset(
-                              'assets/images/logo_full.png',
-                              height: 80,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Selamat Datang Kembali',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF1B1B2F),
-                            ),
-                          ),
-                          const SizedBox(height: 40),
-                          _buildGoogleButton(),
-                          const SizedBox(height: 24),
-                          _buildDemoButtons(),
-                          const Spacer(),
-                          const SizedBox(height: 20),
-                          _buildFooter(),
-                          const SizedBox(height: 12),
-                          const Center(
-                            child: Text(
-                              'versi 1.0 Beta',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF6B7080),
+    return ListenableBuilder(
+      listenable: AccessibilityService.instance,
+      builder: (context, _) {
+        final isHighContrast =
+            AccessibilityService.instance.isHighContrastEnabled ||
+            Theme.of(context).brightness == Brightness.dark ||
+            MediaQuery.of(context).highContrast;
+        final currentBg =
+            isHighContrast ? Colors.black : const Color(0xFFF5F6F8);
+        final textPrimary = AccessibleColors.textPrimary(isHighContrast);
+        final textSecondary = AccessibleColors.textSecondary(isHighContrast);
+        final tealColor =
+            isHighContrast ? const Color(0xFF80CBC4) : primaryDark;
+
+        return Scaffold(
+          extendBodyBehindAppBar: true,
+          backgroundColor: currentBg,
+          resizeToAvoidBottomInset: false,
+          body: Container(
+            color: currentBg,
+            child: SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints:
+                          BoxConstraints(minHeight: constraints.maxHeight),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 20,
+                        ),
+                        child: IntrinsicHeight(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildTopBar(textPrimary),
+                              const SizedBox(height: 24),
+                              Center(
+                                child: Image.asset(
+                                  'assets/images/logo_full.png',
+                                  height: 80,
+                                ),
                               ),
-                            ),
+                              const SizedBox(height: 24),
+                              Text(
+                                'Selamat Datang Kembali',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                  color: textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 60),
+                              _buildGoogleButton(isHighContrast, textPrimary),
+                              const Spacer(),
+                              const SizedBox(height: 20),
+                              _buildFooter(textSecondary, tealColor),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text(
-          'Masuk Akun',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1B1B2F),
-          ),
-        ),
-        Row(
-          children: [
-            _circleIconButton(
-              icon: CupertinoIcons.volume_up,
-              bg: const Color(0xFF7CF0D6),
-              iconColor: primaryDark,
-              onTap: () {},
+                  );
+                },
+              ),
             ),
-          ],
-        ),
-      ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _circleIconButton({
-    required IconData icon,
-    required Color bg,
-    required Color iconColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(24),
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-        child: Icon(icon, color: iconColor, size: 22),
+  Widget _buildTopBar(Color textPrimary) {
+    return Text(
+      'Masuk Akun',
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: textPrimary,
       ),
     );
   }
 
   bool _isLoading = false;
 
-  Widget _buildGoogleButton() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+  Widget _buildGoogleButton(bool isHighContrast, Color textPrimary) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isHighContrast ? const Color(0xFF121212) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isHighContrast
+              ? const Color(0xFF4B5563)
+              : const Color(0xFFE5E7EB),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black
+                .withValues(alpha: isHighContrast ? 0.35 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: _isLoading
@@ -236,7 +228,7 @@ class _LoginPageState extends State<LoginPage> {
                         }
                       } else {
                         if (!mounted) return;
-                        context.push(AppRoutes.registerStep2);
+                        unawaited(context.push(AppRoutes.registerStep2));
                       }
                     } else {
                       if (!mounted) return;
@@ -257,17 +249,9 @@ class _LoginPageState extends State<LoginPage> {
                     ).showSnackBar(SnackBar(content: Text('Gagal Login: $errorMessage')));
                   }
                 },
-          child: Container(
+          child: SizedBox(
             width: double.infinity,
             height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.6),
-                width: 1.5,
-              ),
-            ),
             child: _isLoading
                 ? const Center(
                     child: CupertinoActivityIndicator(radius: 12),
@@ -275,23 +259,14 @@ class _LoginPageState extends State<LoginPage> {
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.network(
-                        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png',
-                        width: 24,
-                        height: 24,
-                        errorBuilder: (_, _, _) => const Icon(
-                          CupertinoIcons.exclamationmark_circle,
-                          size: 24,
-                          color: Colors.red,
-                        ),
-                      ),
+                      const GoogleLogo(size: 24),
                       const SizedBox(width: 12),
-                      const Text(
+                      Text(
                         'Masuk dengan Akun Google',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF1B1B2F),
+                          color: textPrimary,
                         ),
                       ),
                     ],
@@ -302,170 +277,32 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Future<void> _loginDemo(String email, String password) async {
-    setState(() {
-      _isLoading = true;
-    });
-    try {
-      final authDataSource = get_it.GetIt.instance<AuthRemoteDataSource>();
-      final result = await authDataSource.loginWithEmail(
-        email: email,
-        password: password,
-      );
-      if (!mounted) return;
-
-      final token = result['token'];
-      final prefs = get_it.GetIt.instance<SharedPreferences>();
-
-      final dio = get_it.GetIt.instance<Dio>();
-      final profileRes = await dio.get(
-        ApiConstants.me,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Accept': 'application/json',
-          },
-        ),
-      );
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (profileRes.statusCode == 200 && profileRes.data['user'] != null) {
-        final userData = profileRes.data['user'];
-        final role = userData['role'].toString().toLowerCase();
-        await prefs.setString('user_role', role);
-        if (role == 'relawan') {
-          if (userData['id'] != null) {
-            await prefs.setInt(
-              'volunteer_id',
-              (userData['id'] is int)
-                  ? userData['id']
-                  : int.tryParse(userData['id'].toString()) ?? 0,
-            );
-          }
-          final verificationStatus =
-              (userData['status_verifikasi'] ?? 'pending').toString().toLowerCase();
-          await prefs.setString('verification_status', verificationStatus);
-          event_bus.GlobalEventBus.volunteerVerificationStatus.value =
-              (verificationStatus == 'terverifikasi');
-          final isActive = (userData['is_active'] == true ||
-              userData['is_active'] == 1 ||
-              userData['is_active'] == '1');
-          await prefs.setBool('user_is_active', isActive);
-          event_bus.GlobalEventBus.volunteerActiveStatus.value = isActive;
-          if (!mounted) return;
-          context.go(AppRoutes.homeVolunteer);
-        } else {
-          if (!mounted) return;
-          context.go(AppRoutes.dashboard);
-        }
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-      final msg = e.toString().replaceFirst('Exception: ', '');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal Login: $msg')),
-      );
-    }
-  }
-
-  Widget _buildDemoButtons() {
-    return Column(
-      children: [
-        Row(
-          children: const [
-            Expanded(child: Divider(color: Color(0xFFD1D5DB))),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                'ATAU LOGIN PENGUJIAN',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF9CA3AF),
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ),
-            Expanded(child: Divider(color: Color(0xFFD1D5DB))),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _isLoading
-                    ? null
-                    : () => _loginDemo('budi@sahabatsos.test', 'password123'),
-                icon: const Icon(CupertinoIcons.person_fill, size: 16),
-                label: const Text(
-                  'Pengguna\n(Budi)',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF006D77),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _isLoading
-                    ? null
-                    : () => _loginDemo('relawan1@sahabatsos.test', 'password123'),
-                icon: const Icon(CupertinoIcons.shield_fill, size: 16),
-                label: const Text(
-                  'Relawan\n(Rian)',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0E9F6E),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFooter() {
+  Widget _buildFooter(Color textSecondary, Color tealColor) {
     return Center(
-      child: GestureDetector(
+      child: InkWell(
         onTap: () {
           context.go(AppRoutes.register);
         },
-        child: RichText(
-          text: const TextSpan(
-            style: TextStyle(fontSize: 14, color: Color(0xFF6B7080)),
-            children: [
-              TextSpan(text: 'Belum punya akun Sahabat SOS? '),
-              TextSpan(
-                text: 'Daftar di Sini',
-                style: TextStyle(
-                  color: primaryDark,
-                  fontWeight: FontWeight.w800,
-                ),
+        borderRadius: BorderRadius.circular(8),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(fontSize: 14, color: textSecondary),
+                children: [
+                  const TextSpan(text: 'Belum punya akun Sahabat SOS? '),
+                  TextSpan(
+                    text: 'Daftar di Sini',
+                    style: TextStyle(
+                      color: tealColor,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
