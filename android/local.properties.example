@@ -3,6 +3,6 @@
 sdk.dir=/path/to/Android/Sdk
 flutter.sdk=/path/to/flutter
 
-# Tuya / ThingSmart IoT Credentials (Required for Tuya Smartwatch/BLE SDK)
+# Tuya / ThingSmart IoT Credentials (Required for Tuya IoT/BLE SDK)
 thing.smart.appkey=YOUR_TUYA_APP_KEY
 thing.smart.secret=YOUR_TUYA_APP_SECRET

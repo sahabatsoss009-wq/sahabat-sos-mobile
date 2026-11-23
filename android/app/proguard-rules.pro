@@ -11,10 +11,6 @@
 # Flutter Local Notifications
 -keep class com.dexterous.flutterlocalnotifications.** { *; }
 
-# Health Connect
--keep class cachet.plugins.health.** { *; }
--keep class androidx.health.** { *; }
-
 # Audio & Media
 -keep class xyz.luan.audioplayers.** { *; }
 -keep class com.llfbandit.record.** { *; }

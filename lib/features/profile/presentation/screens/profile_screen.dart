@@ -369,7 +369,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       title: '1. Memicu Sinyal Darurat (SOS)',
                       content:
                           '• Ketukan 5 Kali Cepat: Tekan tombol merah SOS di Beranda 5 kali dalam waktu 2 detik untuk menghindari ketidaksengajaan.\n'
-                          '• Tombol Fisik Tuya / Smartwatch: Tekan tombol darurat bluetooth yang terhubung ke aplikasi.\n'
+                          '• Tombol Fisik Tuya: Tekan tombol darurat fisik yang terhubung ke aplikasi.\n'
                           '• Pembatalan SOS: Geser tombol "Geser untuk Batalkan" hingga penuh sebelum hitungan mundur 10 detik berakhir.',
                       isHighContrast: isHighContrast,
                       textColor: textColor,

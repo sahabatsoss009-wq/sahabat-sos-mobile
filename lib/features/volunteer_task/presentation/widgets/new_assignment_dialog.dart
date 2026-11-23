@@ -214,7 +214,6 @@ class _NewAssignmentDialogState extends State<NewAssignmentDialog> {
     final catatanMedis = pengguna['catatan_medis'] ?? user['catatan_medis'] ?? widget.sosData['catatan'];
     final kebutuhanKhusus = pengguna['kebutuhan_khusus'] ?? user['kebutuhan_khusus'];
 
-    final heartRate = widget.sosData['heart_rate'] ?? widget.sosData['telemetri']?['heart_rate'];
     final battery = widget.sosData['battery'] ?? widget.sosData['telemetri']?['battery'];
 
     return Dialog.fullscreen(
@@ -597,7 +596,7 @@ class _NewAssignmentDialogState extends State<NewAssignmentDialog> {
                       ),
 
                       // Telemetri Perangkat Korban (jika tersedia)
-                      if (heartRate != null || battery != null) ...[
+                      if (battery != null) ...[
                         const SizedBox(height: 14),
                         Container(
                           width: double.infinity,
@@ -608,46 +607,22 @@ class _NewAssignmentDialogState extends State<NewAssignmentDialog> {
                             border: AccessibleColors.cardBorder(isHighContrast),
                           ),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              if (heartRate != null)
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      CupertinoIcons.heart_fill,
-                                      color: Color(0xFFE11D48),
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '$heartRate BPM',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: textPrimary,
-                                      ),
-                                    ),
-                                  ],
+                              const Icon(
+                                CupertinoIcons.battery_75_percent,
+                                color: Color(0xFF059669),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Baterai: $battery%',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: textPrimary,
                                 ),
-                              if (battery != null)
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      CupertinoIcons.battery_75_percent,
-                                      color: Color(0xFF059669),
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Baterai: $battery%',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: textPrimary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              ),
                             ],
                           ),
                         ),

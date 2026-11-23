@@ -246,7 +246,7 @@ class _TuyaDeviceListScreenState extends State<TuyaDeviceListScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Kelola tombol darurat fisik & smartwatch Tuya Anda.',
+                            'Kelola tombol darurat fisik Tuya Anda.',
                             style: TextStyle(
                               fontSize: 13,
                               color: isHighContrast
@@ -573,7 +573,7 @@ class _TuyaDeviceListScreenState extends State<TuyaDeviceListScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Hubungkan tombol darurat atau smartwatch Tuya melalui menu pairing di atas.',
+              'Hubungkan tombol darurat fisik Tuya melalui menu pairing di atas.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,

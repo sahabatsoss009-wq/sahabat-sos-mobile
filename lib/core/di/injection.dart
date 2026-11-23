@@ -12,7 +12,6 @@ import '../../features/history/data/datasources/history_remote_data_source.dart'
 import '../services/location_service.dart';
 import '../services/accessibility_service.dart';
 import '../services/sos_rejection_storage.dart';
-import '../services/health_connect_service.dart';
 import '../errors/app_error_handler.dart';
 import '../../routing/app_router.dart';
 import '../../routing/routes.dart';
@@ -117,9 +116,6 @@ Future<void> initInjection() async {
   sl.registerLazySingleton<LocationService>(
     () => LocationService(dio: sl(), prefs: sl()),
   );
-
-  // Health Connect Service
-  sl.registerLazySingleton<HealthConnectService>(() => HealthConnectService());
 
   // Tuya Services
   sl.registerLazySingleton<TuyaChannelService>(() => TuyaChannelService());

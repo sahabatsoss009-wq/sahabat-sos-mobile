@@ -2,11 +2,6 @@ package com.sossahabatsos.app
 
 import android.os.Bundle
 import android.util.Log
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -120,7 +115,6 @@ open class MainActivity : FlutterFragmentActivity() {
                         simulateSosEvent(deviceId)
                         result.success(mapOf("status" to "simulated"))
                     }
-                    "getConnectedSmartbandName" -> handleGetConnectedSmartbandName(result)
                     else -> result.notImplemented()
                 }
             }
@@ -836,74 +830,6 @@ open class MainActivity : FlutterFragmentActivity() {
         Log.d(TAG, "Sending simulated SOS event: $simulatedDp")
         runOnUiThread {
             eventSink?.success(simulatedDp.toString())
-        }
-    }
-
-    /**
-     * Mengambil nama smartwatch / smartband yang terhubung (paired/bonded) via Bluetooth
-     */
-    private fun handleGetConnectedSmartbandName(result: MethodChannel.Result) {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val permissionCheck = ContextCompat.checkSelfPermission(
-                    this,
-                    android.Manifest.permission.BLUETOOTH_CONNECT
-                )
-                if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-                    Log.w(TAG, "BLUETOOTH_CONNECT permission not granted")
-                    result.success(null)
-                    return
-                }
-            }
-
-            val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
-            if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
-                result.success(null)
-                return
-            }
-
-            val bondedDevices: Set<BluetoothDevice>? = bluetoothAdapter.bondedDevices
-            if (bondedDevices.isNullOrEmpty()) {
-                result.success(null)
-                return
-            }
-
-            // Keyword perangkat jam tangan/smartband populer
-            val wearableKeywords = listOf(
-                "band", "watch", "huawei", "fit", "honor",
-                "amazfit", "garmin", "galaxy", "mi smart",
-                "fitbit", "smart", "oppo", "redmi"
-            )
-
-            var detectedName: String? = null
-
-            // Prioritas 1: Perangkat yang mengandung keyword wearable
-            for (device in bondedDevices) {
-                val name = device.name ?: ""
-                val lower = name.lowercase()
-                if (wearableKeywords.any { lower.contains(it) }) {
-                    detectedName = name
-                    break
-                }
-            }
-
-            // Jika tidak ditemukan dengan keyword khusus, tapi ada device ber-major class WEARABLE
-            if (detectedName == null) {
-                for (device in bondedDevices) {
-                    val deviceClass = device.bluetoothClass?.majorDeviceClass
-                    // 1792 = BluetoothClass.Device.Major.WEARABLE
-                    if (deviceClass == 1792) {
-                        detectedName = device.name
-                        break
-                    }
-                }
-            }
-
-            Log.d(TAG, "Detected connected smartband name: $detectedName")
-            result.success(detectedName)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting bonded smartband: ${e.message}", e)
-            result.success(null)
         }
     }
 

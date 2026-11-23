@@ -16,7 +16,6 @@ import 'package:sahabat_sos_mobile/features/tuya_device/presentation/screens/tuy
 import 'package:sahabat_sos_mobile/features/tuya_device/presentation/screens/tuya_device_detail_screen.dart';
 import 'package:sahabat_sos_mobile/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:sahabat_sos_mobile/features/volunteer_task/presentation/volunteer_active_task_page.dart';
-import 'package:sahabat_sos_mobile/features/device/presentation/screens/smartband_screen.dart';
 import 'package:sahabat_sos_mobile/core/services/accessibility_service.dart';
 
 import 'package:get_it/get_it.dart';
@@ -178,12 +177,6 @@ class AppRouter {
           final deviceId = state.pathParameters['id'] ?? '';
           return TuyaDeviceDetailScreen(deviceId: deviceId);
         },
-      ),
-      // Smartband
-      GoRoute(
-        path: AppRoutes.smartband,
-        builder: (context, state) =>
-            const SmartbandScreen(showBackButton: true),
       ),
     ],
   );

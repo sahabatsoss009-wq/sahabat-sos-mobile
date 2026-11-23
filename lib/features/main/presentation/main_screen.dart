@@ -7,7 +7,7 @@ import 'package:sahabat_sos_mobile/features/dashboard/presentation/dashboard_pag
 import 'package:sahabat_sos_mobile/features/profile/presentation/screens/profile_screen.dart';
 import 'package:sahabat_sos_mobile/features/reports/presentation/quick_report_screen.dart';
 import 'package:sahabat_sos_mobile/features/history/presentation/history_screen.dart';
-import 'package:sahabat_sos_mobile/features/device/presentation/pages/device_page.dart';
+import 'package:sahabat_sos_mobile/features/tuya_device/presentation/screens/tuya_device_list_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sahabat_sos_mobile/core/utils/global_event_bus.dart';
@@ -78,7 +78,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const DashboardPage(),
     const QuickReportScreen(),
-    const DevicePage(),
+    const TuyaDeviceListScreen(showBackButton: false),
     const HistoryPage(),
     const ProfileScreen(),
   ];

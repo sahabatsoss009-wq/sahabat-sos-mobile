@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/services/location_service.dart';
-import '../../../../core/services/health_connect_service.dart';
 import '../../../../core/utils/device_info_helper.dart';
 import '../models/tuya_dp_event_model.dart';
 import 'package:get_it/get_it.dart';
@@ -105,92 +104,6 @@ class EmergencyTriggerService {
       'device_info': {
         'mobile': telemetryData['device_info'],
         'tuya': ?tuyaDeviceInfo,
-      },
-    };
-
-    return _sendPayloadWithRetry(payload, token);
-  }
-
-  /// Trigger emergency alert from Health Connect Heart Rate telemetry
-  Future<bool> triggerHeartRateEmergency({
-    required int bpm,
-    String? reason,
-  }) async {
-    final token = _prefs.getString('auth_token');
-    if (token == null || token.isEmpty) {
-      throw const EmergencyTriggerException('User not authenticated');
-    }
-
-    double? latitude;
-    double? longitude;
-    try {
-      final cachedPosition = _locationService.currentPosition.value;
-      if (cachedPosition != null) {
-        latitude = cachedPosition.latitude;
-        longitude = cachedPosition.longitude;
-      } else {
-        final position = await Geolocator.getLastKnownPosition();
-        if (position != null) {
-          latitude = position.latitude;
-          longitude = position.longitude;
-        } else {
-          final quickPosition = await Geolocator.getCurrentPosition(
-            locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.low,
-            ),
-          ).timeout(const Duration(seconds: 1));
-          latitude = quickPosition.latitude;
-          longitude = quickPosition.longitude;
-        }
-      }
-    } catch (_) {}
-
-    final telemetryData = await DeviceInfoHelper.getSosTelemetryData();
-
-    String smartbandName = 'Smartband';
-    try {
-      final name = GetIt.instance<HealthConnectService>().connectedDeviceName.value;
-      if (name.isNotEmpty) {
-        smartbandName = name;
-      }
-    } catch (_) {}
-
-    final smartbandTelemetry = <String, dynamic>{
-      'device_id': 'smartband_health_connect',
-      'device_name': '$smartbandName / Health Connect',
-      'device_model': smartbandName,
-      'brand': 'huawei_health_connect',
-      'type': '$smartbandName / Health Connect',
-      'is_online': true,
-      'heart_rate': bpm,
-      'bpm': bpm,
-      'heart_rate_bpm': bpm,
-      'status': bpm < 45 || bpm > 130 ? 'critical' : 'warning',
-      'reason': reason ??
-          (bpm > 130
-              ? 'Detak jantung terlalu tinggi'
-              : 'Detak jantung terlalu rendah'),
-      'trigger_type': 'Deteksi Detak Jantung ($bpm BPM)',
-      'source': 'Health Connect (Huawei Band / Wearable)',
-      'detected_at': DateTime.now().toIso8601String(),
-      'last_seen': DateTime.now().toIso8601String(),
-    };
-
-    final payload = <String, dynamic>{
-      'device_id': 'smartband_health_connect',
-      'timestamp': DateTime.now().toIso8601String(),
-      'trigger_source': 'smartband_heart_rate',
-      'heart_rate': bpm,
-      'keterangan': 'Detak Jantung Kritis: $bpm BPM (${reason ?? 'Abnormal'})',
-      'latitude': latitude ?? 0.0,
-      'longitude': longitude ?? 0.0,
-      'lokasi_user': _locationService.lastGeocodedAddress,
-      'battery_level': telemetryData['battery_level'],
-      'signal_strength': telemetryData['signal_strength'],
-      'device_info': {
-        'mobile': telemetryData['device_info'],
-        'smartwatch': smartbandTelemetry,
-        'smartband': smartbandTelemetry,
       },
     };
 
