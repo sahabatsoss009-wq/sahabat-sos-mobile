@@ -167,12 +167,6 @@ class ApiConstants {
   static String get tuyaDeviceRegister => '$baseUrl/tuya-device/register';
   static String get tuyaDeviceList => '$baseUrl/tuya-device/list';
 
-  // Smartwatch Endpoints
-  static String get smartwatchList => '$baseUrl/pengguna/smartwatch';
-  static String get smartwatchRegister => '$baseUrl/pengguna/smartwatch';
-  static String smartwatchDetail(dynamic id) => '$baseUrl/pengguna/smartwatch/$id';
-  static String smartwatchTelemetry(dynamic id) => '$baseUrl/pengguna/smartwatch/$id/sync-telemetry';
-
   static String get relawanLocationUpdate => '$baseUrl/relawan/location';
   // Riwayat / History Endpoints
   static String get riwayatPengguna => '$baseUrl/pengguna/riwayat';

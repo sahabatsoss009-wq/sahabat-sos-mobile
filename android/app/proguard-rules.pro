@@ -15,9 +15,6 @@
 -keep class cachet.plugins.health.** { *; }
 -keep class androidx.health.** { *; }
 
-# Flutter Blue Plus
--keep class com.lib.flutter_blue_plus.** { *; }
-
 # Audio & Media
 -keep class xyz.luan.audioplayers.** { *; }
 -keep class com.llfbandit.record.** { *; }

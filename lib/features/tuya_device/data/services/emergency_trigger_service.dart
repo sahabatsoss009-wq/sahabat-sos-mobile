@@ -197,66 +197,6 @@ class EmergencyTriggerService {
     return _sendPayloadWithRetry(payload, token);
   }
 
-  /// Trigger emergency alert from Smartwatch (Button tap or Fall Detection)
-  Future<bool> triggerSmartwatchEmergency(
-    dynamic smartwatchEvent, {
-    dynamic smartwatchDevice,
-  }) async {
-    final token = _prefs.getString('auth_token');
-    if (token == null || token.isEmpty) {
-      throw const EmergencyTriggerException('User not authenticated');
-    }
-
-    double? latitude;
-    double? longitude;
-    try {
-      final cachedPosition = _locationService.currentPosition.value;
-      if (cachedPosition != null) {
-        latitude = cachedPosition.latitude;
-        longitude = cachedPosition.longitude;
-      } else {
-        final position = await Geolocator.getLastKnownPosition();
-        if (position != null) {
-          latitude = position.latitude;
-          longitude = position.longitude;
-        } else {
-          final quickPosition = await Geolocator.getCurrentPosition(
-            locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.low,
-            ),
-          ).timeout(const Duration(seconds: 1));
-          latitude = quickPosition.latitude;
-          longitude = quickPosition.longitude;
-        }
-      }
-    } catch (_) {}
-
-    final telemetryData = await DeviceInfoHelper.getSosTelemetryData();
-
-    final smartwatchMap = smartwatchEvent.toTelemetryMap(
-      brand: smartwatchDevice?.brand ?? 'generic_ble',
-      deviceModel: smartwatchDevice?.deviceModel ?? 'Smartwatch',
-      deviceName: smartwatchDevice?.name ?? 'Smartwatch',
-    );
-
-    final payload = <String, dynamic>{
-      'device_id': smartwatchEvent.deviceId,
-      'timestamp': smartwatchEvent.timestamp.toIso8601String(),
-      'trigger_source': smartwatchEvent.triggerSourceString,
-      'latitude': latitude ?? 0.0,
-      'longitude': longitude ?? 0.0,
-      'lokasi_user': _locationService.lastGeocodedAddress,
-      'battery_level': telemetryData['battery_level'],
-      'signal_strength': telemetryData['signal_strength'],
-      'device_info': {
-        'mobile': telemetryData['device_info'],
-        'smartwatch': smartwatchMap,
-      },
-    };
-
-    return _sendPayloadWithRetry(payload, token);
-  }
-
   Future<bool> _sendPayloadWithRetry(
     Map<String, dynamic> payload,
     String token,
