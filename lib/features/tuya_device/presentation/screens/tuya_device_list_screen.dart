@@ -55,7 +55,7 @@ class _TuyaDeviceListScreenState extends State<TuyaDeviceListScreen> {
 
       await _loadDevices();
     } catch (e) {
-      if (mounted) {
+      if (mounted && widget.showBackButton) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Gagal inisialisasi: $e'),
@@ -457,7 +457,9 @@ class _TuyaDeviceListScreenState extends State<TuyaDeviceListScreen> {
                   id: 'tuya_pairing_wifi_btn',
                   speakText: "Membuka pairing Wi-Fi",
                   hintText: "Tekan sekali lagi untuk membuka pairing Wi-Fi.",
-                  onAction: () => context.push('/tuya-devices/scan-wifi'),
+                  onAction: () => context
+                      .push('/tuya-devices/scan-wifi')
+                      .then((_) => _loadDevices()),
                 );
               },
               child: Container(
@@ -506,7 +508,9 @@ class _TuyaDeviceListScreenState extends State<TuyaDeviceListScreen> {
                   id: 'tuya_scan_bt_btn',
                   speakText: "Membuka scan Bluetooth",
                   hintText: "Tekan sekali lagi untuk membuka scan Bluetooth.",
-                  onAction: () => context.push('/tuya-devices/scan'),
+                  onAction: () => context
+                      .push('/tuya-devices/scan')
+                      .then((_) => _loadDevices()),
                 );
               },
               child: Container(
@@ -707,7 +711,9 @@ class _TuyaDeviceListScreenState extends State<TuyaDeviceListScreen> {
                   id: 'tuya_device_card_${device.deviceId}',
                   speakText: "Membuka detail perangkat ${device.name}",
                   hintText: "Tekan sekali lagi untuk membuka detail perangkat.",
-                  onAction: () => context.push('/tuya-devices/${device.deviceId}'),
+                  onAction: () => context
+                      .push('/tuya-devices/${device.deviceId}')
+                      .then((_) => _loadDevices()),
                 );
               },
               child: Container(
