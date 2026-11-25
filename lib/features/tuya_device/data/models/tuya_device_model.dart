@@ -42,16 +42,18 @@ class TuyaDeviceModel {
         ? Map<String, dynamic>.from(json['dps'] as Map)
         : <String, dynamic>{};
 
-    // Parse battery from common Tuya DPs if missing from root
+    // Parse battery from common Tuya DPs if missing or negative sentinel (-1) from root
     int? parsedBattery = json['battery'] as int?;
-    if (parsedBattery == null || parsedBattery < 0) {
-      if (dpsMap.containsKey('battery_percentage')) {
-        parsedBattery = (dpsMap['battery_percentage'] as num).toInt();
-      } else if (dpsMap.containsKey('3')) {
-        parsedBattery = (dpsMap['3'] as num)
-            .toInt(); // Common for some BLE/Wi-Fi devices
-      } else if (dpsMap.containsKey('104')) {
-        parsedBattery = (dpsMap['104'] as num).toInt();
+    if (parsedBattery != null && (parsedBattery < 0 || parsedBattery > 100)) {
+      parsedBattery = null;
+    }
+    if (parsedBattery == null) {
+      final rawDpBat = dpsMap['battery_percentage'] ?? dpsMap['3'] ?? dpsMap['104'];
+      if (rawDpBat is num) {
+        final candidate = rawDpBat.toInt();
+        if (candidate >= 0 && candidate <= 100) {
+          parsedBattery = candidate;
+        }
       }
     }
 

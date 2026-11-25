@@ -15,8 +15,10 @@ import 'package:sahabat_sos_mobile/core/widgets/app_loading_indicator.dart';
 import 'package:sahabat_sos_mobile/features/dashboard/data/datasources/dashboard_remote_data_source.dart';
 import 'package:sahabat_sos_mobile/features/tuya_device/data/services/tuya_channel_service.dart';
 import 'package:sahabat_sos_mobile/features/tuya_device/data/models/tuya_device_model.dart';
+import 'package:sahabat_sos_mobile/features/tuya_device/data/models/tuya_dp_event_model.dart';
 import 'package:sahabat_sos_mobile/core/errors/app_error_handler.dart';
 import 'package:sahabat_sos_mobile/routing/routes.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -55,16 +57,32 @@ class _DashboardPageState extends State<DashboardPage>
     _fetchBeranda();
 
     final tuyaService = sl<TuyaChannelService>();
+    tuyaService.devicesNotifier.addListener(_onPairedDevicesChanged);
     _deviceSubscription = tuyaService.dpEventStream.listen((event) {
-      if (mounted &&
-          _tuyaDevice != null &&
-          event.deviceId == _tuyaDevice!.deviceId) {
-        setState(() {
+      if (!mounted ||
+          _tuyaDevice == null ||
+          event.deviceId != _tuyaDevice!.deviceId) {
+        return;
+      }
+      setState(() {
+        if (event.eventType == TuyaEventType.deviceRemoved) {
+          _tuyaDevice = null;
+        } else if (event.eventType == TuyaEventType.statusChanged) {
+          _tuyaDevice = _tuyaDevice!.copyWith(isOnline: event.isOnline);
+        } else {
           final newDps = Map<String, dynamic>.from(_tuyaDevice!.dps)
             ..addAll(event.dps);
           _tuyaDevice = _tuyaDevice!.copyWith(dps: newDps);
-        });
-      }
+        }
+      });
+    });
+  }
+
+  void _onPairedDevicesChanged() {
+    if (!mounted) return;
+    final devices = sl<TuyaChannelService>().devicesNotifier.value;
+    setState(() {
+      _tuyaDevice = devices.isNotEmpty ? devices.first : null;
     });
   }
 
@@ -74,21 +92,17 @@ class _DashboardPageState extends State<DashboardPage>
       final data = await dashboardSource.getBerandaData();
 
       final tuyaService = sl<TuyaChannelService>();
-      var devices = await tuyaService.getDeviceList();
-
-      if (devices.isEmpty) {
-        try {
-          await tuyaService.initTuya();
-          devices = await tuyaService.getDeviceList();
-        } catch (_) {}
-      }
+      final token = sl<SharedPreferences>().getString('auth_token') ?? '';
+      List<TuyaDeviceModel> devices = const [];
+      try {
+        await tuyaService.ensureSessionInitialized(token);
+        devices = await tuyaService.getDeviceList();
+      } catch (_) {}
 
       if (mounted) {
         setState(() {
           _userName = data['user']?['name'] ?? '';
-          if (devices.isNotEmpty) {
-            _tuyaDevice = devices.first;
-          }
+          _tuyaDevice = devices.isNotEmpty ? devices.first : null;
           _isBerandaLoading = false;
         });
       }
@@ -102,6 +116,9 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   void dispose() {
+    sl<TuyaChannelService>()
+        .devicesNotifier
+        .removeListener(_onPairedDevicesChanged);
     _animationController.dispose();
     _tapTimer?.cancel();
     _deviceSubscription?.cancel();

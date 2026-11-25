@@ -182,7 +182,6 @@ class _TuyaDeviceDetailScreenState extends State<TuyaDeviceDetailScreen> {
   @override
   void dispose() {
     _eventSubscription?.cancel();
-    _tuyaService.stopListenDevice(widget.deviceId);
     super.dispose();
   }
 

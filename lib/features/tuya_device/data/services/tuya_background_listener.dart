@@ -47,21 +47,21 @@ class TuyaBackgroundListener {
   Future<void> start() async {
     if (_isRunning) return;
 
-    // Check if user is authenticated
+    // Check if user is authenticated as pengguna (skip for relawan)
     final token = _prefs.getString('auth_token');
     if (token == null || token.isEmpty) return;
+    if (_prefs.getString('user_role') == 'relawan') return;
 
-    // Initialize Tuya SDK
+    // Initialize Tuya SDK + user session + EventChannel listening
     try {
-      await _tuyaService.initTuya();
+      await _tuyaService.ensureSessionInitialized(token);
     } catch (_) {
-      // SDK may already be initialized
+      // Fallback to EventChannel listening if SDK/login cannot complete right now
+      _tuyaService.startEventListening();
     }
 
-    // Start EventChannel listening
-    _tuyaService.startEventListening();
-
     // Subscribe to DP events
+    await _subscription?.cancel();
     _subscription = _tuyaService.dpEventStream.listen(
       _handleEvent,
       onError: (error) {
@@ -82,11 +82,10 @@ class TuyaBackgroundListener {
     _isRunning = true;
   }
 
-  /// Stop the background listener
+  /// Stop the background listener subscription without tearing down shared UI EventChannel
   void stop() {
     _subscription?.cancel();
     _subscription = null;
-    _tuyaService.stopEventListening();
     _isRunning = false;
   }
 

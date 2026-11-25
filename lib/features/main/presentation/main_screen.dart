@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get_it/get_it.dart';
@@ -7,6 +9,7 @@ import 'package:sahabat_sos_mobile/features/dashboard/presentation/dashboard_pag
 import 'package:sahabat_sos_mobile/features/profile/presentation/screens/profile_screen.dart';
 import 'package:sahabat_sos_mobile/features/reports/presentation/quick_report_screen.dart';
 import 'package:sahabat_sos_mobile/features/history/presentation/history_screen.dart';
+import 'package:sahabat_sos_mobile/features/tuya_device/data/services/tuya_background_listener.dart';
 import 'package:sahabat_sos_mobile/features/tuya_device/presentation/screens/tuya_device_list_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
@@ -36,6 +39,7 @@ class _MainScreenState extends State<MainScreen> {
       return;
     }
     _initLocationTracking();
+    unawaited(GetIt.instance<TuyaBackgroundListener>().start());
     GlobalEventBus.changeUserTab.addListener(_onChangeUserTab);
   }
 

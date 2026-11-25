@@ -15,6 +15,8 @@ import '../../../../core/services/location_service.dart';
 import '../../../../core/utils/global_event_bus.dart' as event_bus;
 import '../../../../routing/routes.dart';
 import '../../../../core/errors/app_error_handler.dart';
+import '../../../tuya_device/data/services/tuya_background_listener.dart';
+import '../../../tuya_device/data/services/tuya_channel_service.dart';
 import '../../data/datasources/profile_remote_data_source.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -784,8 +786,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     subtitle:
                                         'Hubungkan dan atur tombol fisik bluetooth',
                                     isHighContrast: isHighContrast,
-                                    onTap: () =>
-                                        context.push(AppRoutes.tuyaDevices),
+                                    onTap: () {
+                                      event_bus.GlobalEventBus
+                                          .changeUserTab.value = 2;
+                                    },
                                   ),
                                 ),
                                 const SizedBox(height: 24),
@@ -1929,8 +1933,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             );
           } catch (_) {}
+          GetIt.instance<TuyaBackgroundListener>().stop();
+          GetIt.instance<TuyaChannelService>().resetSession();
           await prefs.remove('auth_token');
           await prefs.remove('is_profile_complete');
+          await prefs.remove('user_role');
           if (!mounted) return;
           context.go(AppRoutes.login);
         },

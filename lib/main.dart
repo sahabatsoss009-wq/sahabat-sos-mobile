@@ -11,6 +11,7 @@ import 'package:sahabat_sos_mobile/core/widgets/permission_gate.dart';
 import 'package:sahabat_sos_mobile/features/tuya_device/data/services/tuya_background_listener.dart';
 import 'package:sahabat_sos_mobile/core/services/notification_service.dart';
 import 'package:sahabat_sos_mobile/routing/app_router.dart';
+import 'package:sahabat_sos_mobile/routing/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -102,7 +103,11 @@ void main() async {
   try {
     final tuyaListener = GetIt.instance<TuyaBackgroundListener>();
     tuyaListener.onSosDetected = (event) {
-      AppRouter.router.push('/sos-status');
+      final currentPath =
+          AppRouter.router.routerDelegate.currentConfiguration.uri.path;
+      if (currentPath != AppRoutes.sosStatus) {
+        AppRouter.router.push(AppRoutes.sosStatus);
+      }
     };
   } catch (e) {
     debugPrint('TuyaListener error di main: $e');

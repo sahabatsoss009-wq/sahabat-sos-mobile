@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../models/tuya_device_model.dart';
@@ -29,13 +30,56 @@ class TuyaChannelService {
   /// Stream of BLE device discovery events (during scanning)
   Stream<TuyaDpEvent> get bleDeviceStream => _bleDeviceController.stream;
 
+  /// Reactive list of paired Tuya devices shared across screens
+  final ValueNotifier<List<TuyaDeviceModel>> devicesNotifier =
+      ValueNotifier<List<TuyaDeviceModel>>(const []);
+
+  bool _isInitialized = false;
+  String? _loggedInUid;
+  Future<void>? _sessionInitFuture;
+  String? _inFlightUid;
+
   bool _isListening = false;
   bool get isListening => _isListening;
+
+  /// Serialize SDK init + user session login + EventChannel subscription
+  /// so concurrent callers (DashboardPage, TuyaDeviceListScreen, TuyaBackgroundListener)
+  /// do not race on Tuya home creation or device queries.
+  Future<void> ensureSessionInitialized(String uid) {
+    if (_isInitialized &&
+        (uid.isEmpty || _loggedInUid == uid) &&
+        _isListening) {
+      return Future<void>.value();
+    }
+
+    if (_sessionInitFuture != null && _inFlightUid == uid) {
+      return _sessionInitFuture!;
+    }
+
+    _inFlightUid = uid;
+    final future = _doInitializeSession(uid);
+    _sessionInitFuture = future;
+    return future.whenComplete(() {
+      if (identical(_sessionInitFuture, future)) {
+        _sessionInitFuture = null;
+        _inFlightUid = null;
+      }
+    });
+  }
+
+  Future<void> _doInitializeSession(String uid) async {
+    await initTuya();
+    if (uid.isNotEmpty && _loggedInUid != uid) {
+      await loginAnonymous(uid);
+    }
+    startEventListening();
+  }
 
   /// Initialize the Tuya SDK on native side
   Future<Map<String, dynamic>> initTuya() async {
     try {
       final result = await _methodChannel.invokeMethod('initTuya');
+      _isInitialized = true;
       return Map<String, dynamic>.from(result as Map);
     } on PlatformException catch (e) {
       throw TuyaServiceException('Failed to init Tuya SDK: ${e.message}');
@@ -48,6 +92,7 @@ class TuyaChannelService {
       final result = await _methodChannel.invokeMethod('loginAnonymous', {
         'uid': uid,
       });
+      _loggedInUid = uid;
       return Map<String, dynamic>.from(result as Map);
     } on PlatformException catch (e) {
       throw TuyaServiceException('Failed to login: ${e.message}');
@@ -161,13 +206,15 @@ class TuyaChannelService {
     try {
       final result = await _methodChannel.invokeMethod('getDeviceList');
       final list = result as List<dynamic>;
-      return list
+      final devices = list
           .map(
             (item) => TuyaDeviceModel.fromJson(
               Map<String, dynamic>.from(item as Map),
             ),
           )
           .toList();
+      devicesNotifier.value = List<TuyaDeviceModel>.unmodifiable(devices);
+      return devices;
     } on PlatformException catch (e) {
       throw TuyaServiceException('Failed to get device list: ${e.message}');
     }
@@ -177,6 +224,9 @@ class TuyaChannelService {
   Future<void> removeDevice(String deviceId) async {
     try {
       await _methodChannel.invokeMethod('removeDevice', {'deviceId': deviceId});
+      devicesNotifier.value = List<TuyaDeviceModel>.unmodifiable(
+        devicesNotifier.value.where((d) => d.deviceId != deviceId),
+      );
     } on PlatformException catch (e) {
       throw TuyaServiceException('Failed to remove device: ${e.message}');
     }
@@ -261,8 +311,18 @@ class TuyaChannelService {
     _isListening = false;
   }
 
+  /// Reset active user session state on logout
+  void resetSession() {
+    _loggedInUid = null;
+    _sessionInitFuture = null;
+    _inFlightUid = null;
+    devicesNotifier.value = const [];
+    stopEventListening();
+  }
+
   void dispose() {
     stopEventListening();
+    devicesNotifier.dispose();
     _dpEventController.close();
     _bleDeviceController.close();
   }

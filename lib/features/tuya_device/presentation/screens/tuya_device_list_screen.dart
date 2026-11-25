@@ -36,21 +36,25 @@ class _TuyaDeviceListScreenState extends State<TuyaDeviceListScreen> {
   @override
   void initState() {
     super.initState();
+    _devices = _tuyaService.devicesNotifier.value;
+    _tuyaService.devicesNotifier.addListener(_onSharedDevicesChanged);
     _initializeService();
+  }
+
+  void _onSharedDevicesChanged() {
+    if (!mounted) return;
+    setState(() {
+      _devices = _tuyaService.devicesNotifier.value;
+    });
   }
 
   Future<void> _initializeService() async {
     setState(() => _isLoading = true);
     try {
-      await _tuyaService.initTuya();
-
       final prefs = sl<SharedPreferences>();
       final token = prefs.getString('auth_token') ?? '';
-      if (token.isNotEmpty) {
-        await _tuyaService.loginAnonymous(token);
-      }
+      await _tuyaService.ensureSessionInitialized(token);
 
-      _tuyaService.startEventListening();
       _eventSubscription = _tuyaService.dpEventStream.listen(_handleDpEvent);
 
       await _loadDevices();
@@ -137,6 +141,7 @@ class _TuyaDeviceListScreenState extends State<TuyaDeviceListScreen> {
 
   @override
   void dispose() {
+    _tuyaService.devicesNotifier.removeListener(_onSharedDevicesChanged);
     _eventSubscription?.cancel();
     super.dispose();
   }
